@@ -70,9 +70,34 @@ export default function AdminDashboardPage() {
             .map((u: any) => u.level_id) || []
         );
         setUnlockedLevelIds(levelIds);
+        console.log("[v0] Unlocked levels:", Array.from(levelIds));
       }
     } catch (err) {
       console.error("[v0] Error fetching unlocked levels:", err);
+    }
+  };
+
+  const handleLockLevel = async (levelId: string) => {
+    try {
+      const response = await fetch("/api/admin/lock-level", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ levelId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to lock level");
+      }
+
+      console.log("[v0] Level locked successfully");
+      await fetchUnlockedLevels();
+      await refetchMetrics();
+    } catch (error) {
+      console.error("[v0] Lock error:", error);
+      alert(error instanceof Error ? error.message : "Failed to lock level");
     }
   };
 
@@ -124,7 +149,11 @@ export default function AdminDashboardPage() {
   if (pageLoading) {
     return (
       <div className="px-4 sm:px-6 py-8 sm:py-12">
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-sm sm:text-base"
+        >
           Loading dashboard...
         </motion.p>
       </div>
@@ -136,13 +165,18 @@ export default function AdminDashboardPage() {
       <div className="px-4 sm:px-6 py-8 sm:py-12">
         <Card className="border-red-200 bg-red-50">
           <CardHeader>
-            <CardTitle className="text-red-900">
+            <CardTitle className="text-red-900 text-lg sm:text-xl">
               Error Loading Dashboard
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-red-800 mb-4 text-sm sm:text-base">{error}</p>
-            <Button onClick={() => window.location.reload()}>Retry</Button>
+            <Button
+              onClick={() => window.location.reload()}
+              className="text-sm sm:text-base"
+            >
+              Retry
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -158,7 +192,7 @@ export default function AdminDashboardPage() {
         transition={{ duration: 0.5 }}
       >
         <div className="space-y-2">
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
             Dashboard
           </h1>
           <p className="text-sm sm:text-base text-slate-600">
@@ -175,8 +209,8 @@ export default function AdminDashboardPage() {
         >
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="bg-slate-100 animate-pulse">
-              <CardContent className="h-24 flex items-center justify-center">
-                <p className="text-slate-400 text-sm">Loading...</p>
+              <CardContent className="h-20 sm:h-24 flex items-center justify-center">
+                <p className="text-slate-400 text-xs sm:text-sm">Loading...</p>
               </CardContent>
             </Card>
           ))}
@@ -279,7 +313,7 @@ export default function AdminDashboardPage() {
             <CardTitle className="text-lg sm:text-xl">
               Assessment Levels
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Unlock levels to grant staff access to assessments
             </CardDescription>
           </CardHeader>
@@ -297,6 +331,7 @@ export default function AdminDashboardPage() {
                     price={level.price}
                     staffCount={metrics?.totalStaff || 0}
                     onUnlockClick={() => handleUnlockClick(level)}
+                    onLockClick={() => handleLockLevel(level.id)}
                     index={idx}
                   />
                 );
@@ -313,7 +348,7 @@ export default function AdminDashboardPage() {
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
       >
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">
+        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-4">
           Quick Actions
         </h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -328,7 +363,10 @@ export default function AdminDashboardPage() {
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
               >
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 rounded-lg text-sm sm:text-base">
+                <Button
+                  className="w-full bg-blue-600 hover:bg-blue-700 rounded-lg text-sm sm:text-base"
+                  size="lg"
+                >
                   {action.label}
                 </Button>
               </motion.div>
@@ -349,7 +387,7 @@ export default function AdminDashboardPage() {
             <CardTitle className="text-lg sm:text-xl">
               Recent Staff Registrations
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Latest staff members to join the program
             </CardDescription>
           </CardHeader>
@@ -363,15 +401,17 @@ export default function AdminDashboardPage() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: idx * 0.05, duration: 0.4 }}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-3 sm:p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <p className="font-medium text-slate-900 text-sm">
                         {staff.first_name} {staff.last_name}
                       </p>
-                      <p className="text-xs text-slate-600">{staff.email}</p>
+                      <p className="text-xs text-slate-600 truncate">
+                        {staff.email}
+                      </p>
                     </div>
-                    <div className="text-left sm:text-right w-full sm:w-auto">
+                    <div className="text-left sm:text-right w-full sm:w-auto flex-shrink-0">
                       <p className="text-xs font-medium text-slate-900">
                         {staff.department}
                       </p>
