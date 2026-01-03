@@ -1,28 +1,82 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { AlertCircle, CheckCircle2 } from "lucide-react"
-import Link from "next/link"
-import Image from "next/image"
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function AdminSetupPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [nin, setNin] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [nin, setNin] = useState("");
+  const [ninError, setNinError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  const validateNIN = (value: string) => {
+    // Remove any non-digit characters
+    const digitsOnly = value.replace(/\D/g, "");
+
+    if (digitsOnly.length === 0) {
+      setNinError("");
+      return true;
+    }
+
+    if (digitsOnly.length < 11) {
+      setNinError("NIN must be 11 digits");
+      return false;
+    }
+
+    if (digitsOnly.length > 11) {
+      setNinError("NIN cannot exceed 11 digits");
+      return false;
+    }
+
+    setNinError("");
+    return true;
+  };
+
+  const handleNinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Only allow digits
+    const digitsOnly = value.replace(/\D/g, "");
+    // Limit to 11 digits
+    const limitedValue = digitsOnly.slice(0, 11);
+
+    setNin(limitedValue);
+    validateNIN(limitedValue);
+  };
 
   const handleSetup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setMessage(null)
-    setLoading(true)
+    e.preventDefault();
+    setMessage(null);
+
+    // Final validation before submission
+    if (!validateNIN(nin) || nin.length !== 11) {
+      setMessage({
+        type: "error",
+        text: "Please enter a valid 11-digit NIN",
+      });
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const response = await fetch("/api/admin/setup", {
@@ -35,34 +89,36 @@ export default function AdminSetupPage() {
           lastName,
           nin,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Setup failed")
+        throw new Error(data.error || "Setup failed");
       }
 
       setMessage({
         type: "success",
         text: `Admin user created successfully! You can now login with email: ${email}`,
-      })
+      });
 
       // Clear form
-      setEmail("")
-      setPassword("")
-      setFirstName("")
-      setLastName("")
-      setNin("")
+      setEmail("");
+      setPassword("");
+      setFirstName("");
+      setLastName("");
+      setNin("");
+      setNinError("");
+      setNinError("");
     } catch (error) {
       setMessage({
         type: "error",
         text: error instanceof Error ? error.message : "An error occurred",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center p-4">
@@ -83,7 +139,9 @@ export default function AdminSetupPage() {
         <Card>
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl">Admin Setup</CardTitle>
-            <CardDescription>Create your admin account to manage EDOHERMA</CardDescription>
+            <CardDescription>
+              Create your admin account to manage EDOHERMA
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSetup} className="space-y-4">
@@ -133,16 +191,31 @@ export default function AdminSetupPage() {
 
               <div className="space-y-1">
                 <Label htmlFor="nin" className="text-sm">
-                  National ID
+                  National ID (11 digits)
                 </Label>
                 <Input
                   id="nin"
                   placeholder="12345678901"
                   required
                   value={nin}
-                  onChange={(e) => setNin(e.target.value)}
+                  onChange={handleNinChange}
                   disabled={loading}
+                  className={
+                    ninError ? "border-red-300 focus-visible:ring-red-400" : ""
+                  }
+                  maxLength={11}
                 />
+                {ninError && (
+                  <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {ninError}
+                  </p>
+                )}
+                {nin.length > 0 && !ninError && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {nin.length}/11 digits
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -154,6 +227,7 @@ export default function AdminSetupPage() {
                   type="password"
                   placeholder="••••••••"
                   required
+                  minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
@@ -177,7 +251,11 @@ export default function AdminSetupPage() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={loading}
+              >
                 {loading ? "Creating Admin..." : "Create Admin Account"}
               </Button>
 
@@ -193,5 +271,5 @@ export default function AdminSetupPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
