@@ -1,6 +1,6 @@
-"use server"
+"use server";
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server";
 
 export async function createUserProfile(
   userId: string,
@@ -9,18 +9,40 @@ export async function createUserProfile(
   email: string,
   nin: string,
   department: string,
-  role: "staff" | "admin" = "staff",
+  role: "staff" | "admin" = "staff"
 ) {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   try {
-    console.log("[v0] Creating profile for user:", userId)
+    console.log("[v0] Creating profile for user:", userId);
 
-    const { data: existingProfile } = await supabase.from("profiles").select("id").eq("id", userId).single()
+    const { data: emailInUse, error: emailCheckError } = await supabase
+      .from("profiles")
+      .select("id, role")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (emailCheckError) {
+      console.log("[v0] Email check error:", emailCheckError);
+      throw new Error("Error checking email availability");
+    }
+
+    if (emailInUse) {
+      console.log("[v0] Email already registered with role:", emailInUse.role);
+      throw new Error(
+        `This email is already registered as a ${emailInUse.role}. Each email can only be used for one role.`
+      );
+    }
+
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", userId)
+      .single();
 
     if (existingProfile) {
-      console.log("[v0] Profile already exists for user:", userId)
-      return { success: true, data: existingProfile }
+      console.log("[v0] Profile already exists for user:", userId);
+      return { success: true, data: existingProfile };
     }
 
     // Insert profile into database
@@ -32,17 +54,17 @@ export async function createUserProfile(
       nin,
       department,
       role, // Now uses the role parameter instead of hardcoded 'staff'
-    })
+    });
 
     if (error) {
-      console.log("[v0] Profile creation error:", error)
-      throw new Error(error.message)
+      console.log("[v0] Profile creation error:", error);
+      throw new Error(error.message);
     }
 
-    console.log("[v0] Profile created successfully")
-    return { success: true, data }
+    console.log("[v0] Profile created successfully");
+    return { success: true, data };
   } catch (error) {
-    console.log("[v0] Profile creation failed:", error)
-    throw error
+    console.log("[v0] Profile creation failed:", error);
+    throw error;
   }
 }
