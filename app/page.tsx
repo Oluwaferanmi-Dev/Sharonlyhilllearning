@@ -10,8 +10,20 @@ import {
   containerVariants,
   itemVariants,
 } from "@/lib/animations";
+import { Menu, X } from "lucide-react";
+import { useState } from "react";
 
 export default function LandingPage() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Navigation */}
@@ -21,41 +33,99 @@ export default function LandingPage() {
         transition={{ duration: 0.5 }}
         className="border-b border-slate-200"
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 md:py-1">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-12 h-12 sm:w-24 sm:h-24 relative">
-              <Image
-                src="/cherith-logo.png"
-                alt="Cherith Training Academy"
-                width={96}
-                height={96}
-                className="object-contain"
-              />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2 sm:py-4 md:py-0.5">
+          {/* Desktop and Mobile Header */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 md:py-1">
+            {/* Logo Section */}
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-12 h-12 sm:w-24 sm:h-24 relative">
+                  <Image
+                    src="/cherith-logo.png"
+                    alt="Cherith Training Academy"
+                    width={96}
+                    height={96}
+                    className="object-contain"
+                  />
+                </div>
+                <span className="text-sm sm:text-lg font-semibold text-slate-900 text-center sm:text-left">
+                  Cherith Training Academy
+                </span>
+              </div>
+
+              {/* Mobile Menu Toggle */}
+              <button
+                className="sm:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                onClick={toggleMobileMenu}
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="w-6 h-6 text-slate-900" />
+                ) : (
+                  <Menu className="w-6 h-6 text-slate-900" />
+                )}
+              </button>
             </div>
-            <span className="text-sm sm:text-lg font-semibold text-slate-900 text-center sm:text-left">
-              Cherith Training Academy
-            </span>
+
+            {/* Desktop Navigation Links */}
+            <div className="hidden sm:flex items-center gap-2">
+              <Link href="/setup/admin">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs sm:text-sm text-slate-600 hover:text-blue-600 px-2 sm:px-4"
+                >
+                  Admin Setup
+                </Button>
+              </Link>
+              <Link href="/auth/login">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs sm:text-sm"
+                >
+                  Sign In
+                </Button>
+              </Link>
+              <Link href="/auth/register">
+                <Button
+                  size="sm"
+                  className="text-xs sm:text-sm bg-blue-600 hover:bg-blue-700"
+                >
+                  Create Account
+                </Button>
+              </Link>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Link href="/setup/admin">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs sm:text-sm text-slate-600 hover:text-blue-600 px-2 sm:px-4"
+
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="sm:hidden mt-4 pt-4 border-t border-slate-200 space-y-3">
+              <Link href="/setup/admin" onClick={closeMobileMenu}>
+                <div className="px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-900 text-center">
+                  Admin Setup
+                </div>
+              </Link>
+              <Link
+                href="/auth/login"
+                onClick={closeMobileMenu}
+                className="block"
               >
-                Admin Setup
-              </Button>
-            </Link>
-            <Link href="/auth/login">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs sm:text-sm"
+                <Button variant="outline" className="w-full text-sm">
+                  Sign In
+                </Button>
+              </Link>
+              <Link
+                href="/auth/register"
+                onClick={closeMobileMenu}
+                className="block"
               >
-                Sign In
-              </Button>
-            </Link>
-          </div>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-sm">
+                  Create Account
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </motion.nav>
 
@@ -126,7 +196,7 @@ export default function LandingPage() {
             className="relative h-64 sm:h-96 md:h-[500px] rounded-xl overflow-hidden bg-slate-200 shadow-xl"
           >
             <Image
-              src="/diverse-healthcare-team-professionals-in-hospital.jpg"
+              src="/nurses.png"
               alt="Healthcare professionals in hospital setting"
               fill
               className="object-cover"

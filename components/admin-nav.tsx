@@ -8,10 +8,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Menu, X } from "lucide-react";
 
 export function AdminNav({ user }: { user: User | null }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -20,10 +22,18 @@ export function AdminNav({ user }: { user: User | null }) {
     router.push("/");
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   if (!user) {
     return (
       <nav className="border-b border-slate-200 bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-20 h-20 relative">
               <Image
@@ -34,7 +44,9 @@ export function AdminNav({ user }: { user: User | null }) {
                 className="object-contain"
               />
             </div>
-            <span className="font-semibold text-slate-900">EDOHERMA ADMIN</span>
+            <span className="hidden sm:inline font-semibold text-slate-900">
+              EDOHERMA ADMIN
+            </span>
           </Link>
           <Button
             onClick={() => router.push("/auth/login")}
@@ -50,10 +62,12 @@ export function AdminNav({ user }: { user: User | null }) {
 
   return (
     <nav className="border-b border-slate-200 bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <Link href="/admin" className="flex items-center gap-2">
-            <div className="w-16 h-16 relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+        {/* Desktop and Mobile Header */}
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/admin" className="flex items-center gap-2 flex-shrink-0">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 relative">
               <Image
                 src="/cherith-logo.png"
                 alt="Cherith Training Academy"
@@ -62,53 +76,116 @@ export function AdminNav({ user }: { user: User | null }) {
                 className="object-contain"
               />
             </div>
-            <span className="font-semibold text-slate-900">EDOHERMA ADMIN</span>
+            <span className="hidden sm:inline font-semibold text-slate-900 text-sm sm:text-base">
+              EDOHERMA ADMIN
+            </span>
           </Link>
-          <div className="hidden md:flex gap-6">
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex gap-8 flex-1 ml-8">
             <Link
               href="/admin"
-              className="text-sm font-medium text-slate-700 hover:text-slate-900"
+              className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
             >
               Dashboard
             </Link>
             <Link
               href="/admin/staff"
-              className="text-sm font-medium text-slate-700 hover:text-slate-900"
+              className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
             >
               Staff
             </Link>
             <Link
               href="/admin/assessments"
-              className="text-sm font-medium text-slate-700 hover:text-slate-900"
+              className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
             >
               Assessments
             </Link>
             <Link
               href="/admin/payments"
-              className="text-sm font-medium text-slate-700 hover:text-slate-900"
+              className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
             >
               Payments
             </Link>
           </div>
+
+          {/* Desktop Right Section */}
+          <div className="hidden md:flex items-center gap-4 ml-auto">
+            <div className="text-right">
+              <p className="text-sm font-medium text-slate-900">
+                {user.user_metadata?.last_name} {user.user_metadata?.first_name}
+              </p>
+              <p className="text-xs text-slate-600">Administrator</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              disabled={isLoading}
+            >
+              {isLoading ? "Logging out..." : "Logout"}
+            </Button>
+          </div>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="md:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            onClick={toggleMobileMenu}
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? (
+              <X className="w-6 h-6 text-slate-900" />
+            ) : (
+              <Menu className="w-6 h-6 text-slate-900" />
+            )}
+          </button>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-sm font-medium text-slate-900">
-              {user.user_metadata.last_name} <span></span>
-              {user.user_metadata.first_name}
-            </p>
-            <p className="text-xs text-slate-600">Administrator</p>
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden mt-4 pt-4 border-t border-slate-200 space-y-3">
+            {/* Mobile Navigation Links */}
+            <div className="space-y-2">
+              <Link href="/admin" onClick={closeMobileMenu}>
+                <div className="px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-900">
+                  Dashboard
+                </div>
+              </Link>
+              <Link href="/admin/staff" onClick={closeMobileMenu}>
+                <div className="px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-900">
+                  Staff
+                </div>
+              </Link>
+              <Link href="/admin/assessments" onClick={closeMobileMenu}>
+                <div className="px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-900">
+                  Assessments
+                </div>
+              </Link>
+              <Link href="/admin/payments" onClick={closeMobileMenu}>
+                <div className="px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-900">
+                  Payments
+                </div>
+              </Link>
+            </div>
+
+            {/* Mobile User Info */}
+            <div className="px-4 py-3 bg-slate-50 rounded-lg border border-slate-200">
+              <p className="text-sm font-medium text-slate-900">
+                {user.user_metadata?.last_name} {user.user_metadata?.first_name}
+              </p>
+              <p className="text-xs text-slate-600 mt-1">Administrator</p>
+            </div>
+
+            {/* Mobile Logout Button */}
+            <Button
+              onClick={handleLogout}
+              disabled={isLoading}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              {isLoading ? "Logging out..." : "Logout"}
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            disabled={isLoading}
-          >
-            {isLoading ? "Logging out..." : "Logout"}
-          </Button>
-        </div>
+        )}
       </div>
     </nav>
   );
