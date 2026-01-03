@@ -36,31 +36,11 @@ const DEPARTMENTS = [
   "Other",
 ];
 
-// NIN validation function
-const validateNIN = (nin: string): { isValid: boolean; message: string } => {
-  // Remove any whitespace
-  const cleanNIN = nin.trim();
-
-  // Check if NIN is exactly 11 digits
-  if (!/^\d{11}$/.test(cleanNIN)) {
-    return {
-      isValid: false,
-      message: "NIN must be exactly 11 digits",
-    };
-  }
-
-  return {
-    isValid: true,
-    message: "NIN is valid",
-  };
-};
-
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [nin, setNin] = useState("");
-  const [ninError, setNinError] = useState<string | null>(null);
   const [department, setDepartment] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -68,30 +48,9 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  // Handle NIN input change with validation
-  const handleNinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setNin(value);
-
-    // Show validation error only if user has started typing
-    if (value.length > 0) {
-      const validation = validateNIN(value);
-      setNinError(validation.isValid ? null : validation.message);
-    } else {
-      setNinError(null);
-    }
-  };
-
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
-    // Validate NIN before submission
-    const ninValidation = validateNIN(nin);
-    if (!ninValidation.isValid) {
-      setError(ninValidation.message);
-      return;
-    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -131,6 +90,15 @@ export default function RegisterPage() {
         throw new Error("No user ID returned from signup");
 
       console.log("[v0] Auth user created:", authData.user.id);
+
+      if (authError?.message?.includes("already registered")) {
+        throw new Error(
+          "This email is already registered as an admin. Each email can only be used for one role."
+        );
+      }
+
+      // The error occurred because the trigger was already creating the profile with defaults,
+      // and this manual insert was conflicting (duplicate key).
 
       console.log(
         "[v0] Profile created successfully via trigger, redirecting..."
@@ -223,16 +191,12 @@ export default function RegisterPage() {
               </Label>
               <Input
                 id="nin"
-                placeholder="Enter your 11-digit NIN"
+                placeholder="Enter your NIN"
                 required
                 value={nin}
-                onChange={handleNinChange}
-                maxLength={11}
-                className={`text-sm ${ninError ? "border-red-500" : ""}`}
+                onChange={(e) => setNin(e.target.value)}
+                className="text-sm"
               />
-              {ninError && (
-                <p className="text-xs text-red-600 mt-1">{ninError}</p>
-              )}
             </div>
 
             <div className="space-y-1">
@@ -290,7 +254,7 @@ export default function RegisterPage() {
             <Button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700"
-              disabled={isLoading || ninError !== null}
+              disabled={isLoading}
             >
               {isLoading ? "Creating account..." : "Create Account"}
             </Button>
