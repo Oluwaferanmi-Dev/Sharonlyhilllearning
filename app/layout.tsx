@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Cherith Training Academy - Edoherma Pre-assessment Test",
+  title: "Cherith Training Academy - Edoherma Pre-assessment Test.",
   description:
     "Comprehensive healthcare compliance assessments and training programs. Master regulatory standards with expert-designed courses.",
   generator: "v0.app",
