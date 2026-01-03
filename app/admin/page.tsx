@@ -77,30 +77,6 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleLockLevel = async (levelId: string) => {
-    try {
-      const response = await fetch("/api/admin/lock-level", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ levelId }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to lock level");
-      }
-
-      console.log("[v0] Level locked successfully");
-      await fetchUnlockedLevels();
-      await refetchMetrics();
-    } catch (error) {
-      console.error("[v0] Lock error:", error);
-      alert(error instanceof Error ? error.message : "Failed to lock level");
-    }
-  };
-
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -148,12 +124,8 @@ export default function AdminDashboardPage() {
 
   if (pageLoading) {
     return (
-      <div className="px-4 sm:px-6 py-8 sm:py-12">
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-sm sm:text-base"
-        >
+      <div className="px-6 py-12">
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           Loading dashboard...
         </motion.p>
       </div>
@@ -162,21 +134,16 @@ export default function AdminDashboardPage() {
 
   if (error) {
     return (
-      <div className="px-4 sm:px-6 py-8 sm:py-12">
+      <div className="px-6 py-12">
         <Card className="border-red-200 bg-red-50">
           <CardHeader>
-            <CardTitle className="text-red-900 text-lg sm:text-xl">
+            <CardTitle className="text-red-900">
               Error Loading Dashboard
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-red-800 mb-4 text-sm sm:text-base">{error}</p>
-            <Button
-              onClick={() => window.location.reload()}
-              className="text-sm sm:text-base"
-            >
-              Retry
-            </Button>
+            <p className="text-red-800 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
           </CardContent>
         </Card>
       </div>
@@ -184,7 +151,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="px-4 sm:px-6 py-8 sm:py-12 space-y-6 sm:space-y-8">
+    <div className="px-6 py-12 space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -192,10 +159,8 @@ export default function AdminDashboardPage() {
         transition={{ duration: 0.5 }}
       >
         <div className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
-            Dashboard
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600">
+          <h1 className="text-4xl font-bold text-slate-900">Dashboard</h1>
+          <p className="text-slate-600">
             Manage staff access, assessments, and unlock training levels
           </p>
         </div>
@@ -205,12 +170,12 @@ export default function AdminDashboardPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+          className="grid md:grid-cols-4 gap-6"
         >
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="bg-slate-100 animate-pulse">
-              <CardContent className="h-20 sm:h-24 flex items-center justify-center">
-                <p className="text-slate-400 text-xs sm:text-sm">Loading...</p>
+              <CardContent className="h-24 flex items-center justify-center">
+                <p className="text-slate-400">Loading...</p>
               </CardContent>
             </Card>
           ))}
@@ -223,7 +188,7 @@ export default function AdminDashboardPage() {
           variants={containerVariants}
           viewport={{ once: true }}
         >
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid md:grid-cols-4 gap-6">
             <AnimatedMetricCard
               title="Total Staff"
               value={metrics?.totalStaff || 0}
@@ -269,12 +234,12 @@ export default function AdminDashboardPage() {
         >
           <Card className="border-0 shadow-sm bg-slate-50">
             <CardHeader className="pb-3">
-              <CardTitle className="text-xs sm:text-sm font-medium text-slate-700">
+              <CardTitle className="text-sm font-medium text-slate-700">
                 Payment Information
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-slate-600 mb-1">Status</p>
                   <motion.p
@@ -287,7 +252,7 @@ export default function AdminDashboardPage() {
                     {payment?.status || "Unpaid"}
                   </motion.p>
                 </div>
-                <div className="text-left sm:text-right">
+                <div className="text-right">
                   <p className="text-xs text-slate-600 mb-1">Amount Due</p>
                   <p className="text-sm font-semibold text-slate-900">
                     $
@@ -310,15 +275,13 @@ export default function AdminDashboardPage() {
       >
         <Card className="border-0 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg sm:text-xl">
-              Assessment Levels
-            </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
+            <CardTitle>Assessment Levels</CardTitle>
+            <CardDescription>
               Unlock levels to grant staff access to assessments
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid md:grid-cols-3 gap-6">
               {assessmentLevels.map((level, idx) => {
                 const isUnlocked = unlockedLevelIds.has(level.id);
                 return (
@@ -331,7 +294,6 @@ export default function AdminDashboardPage() {
                     price={level.price}
                     staffCount={metrics?.totalStaff || 0}
                     onUnlockClick={() => handleUnlockClick(level)}
-                    onLockClick={() => handleLockLevel(level.id)}
                     index={idx}
                   />
                 );
@@ -348,23 +310,23 @@ export default function AdminDashboardPage() {
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
       >
-        <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-4">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">
           Quick Actions
         </h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid md:grid-cols-3 gap-4">
           {[
             { href: "/admin/staff", label: "Manage Staff" },
             { href: "/admin/payments", label: "View Payments" },
             { href: "/admin/assessments", label: "View All Assessments" },
           ].map((action, idx) => (
-            <Link key={idx} href={action.href} className="w-full">
+            <Link key={idx} href={action.href}>
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
               >
                 <Button
-                  className="w-full bg-blue-600 hover:bg-blue-700 rounded-lg text-sm sm:text-base"
+                  className="w-full bg-blue-600 hover:bg-blue-700 rounded-lg"
                   size="lg"
                 >
                   {action.label}
@@ -384,10 +346,8 @@ export default function AdminDashboardPage() {
       >
         <Card className="border-0 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg sm:text-xl">
-              Recent Staff Registrations
-            </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
+            <CardTitle>Recent Staff Registrations</CardTitle>
+            <CardDescription>
               Latest staff members to join the program
             </CardDescription>
           </CardHeader>
@@ -401,17 +361,15 @@ export default function AdminDashboardPage() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: idx * 0.05, duration: 0.4 }}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                    className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
                   >
-                    <div className="flex-1 min-w-0">
+                    <div>
                       <p className="font-medium text-slate-900 text-sm">
                         {staff.first_name} {staff.last_name}
                       </p>
-                      <p className="text-xs text-slate-600 truncate">
-                        {staff.email}
-                      </p>
+                      <p className="text-xs text-slate-600">{staff.email}</p>
                     </div>
-                    <div className="text-left sm:text-right w-full sm:w-auto flex-shrink-0">
+                    <div className="text-right">
                       <p className="text-xs font-medium text-slate-900">
                         {staff.department}
                       </p>
