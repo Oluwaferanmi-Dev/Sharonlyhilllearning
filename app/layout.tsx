@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "Cherith Training Academy - Edoherma Pre-assessment Test.",
   description:
     "Comprehensive healthcare compliance assessments and training programs. Master regulatory standards with expert-designed courses.",
-  generator: "v0.app",
+
   icons: {
     icon: [
       {
