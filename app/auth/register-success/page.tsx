@@ -16,10 +16,10 @@ export default function RegisterSuccessPage() {
         <CardHeader className="space-y-2 text-center">
           <div className="flex items-center justify-center mb-4">
             <Image
-              src="/cherith-training-academy-logo.png"
+              src="/cherith-logo.jpg"
               alt="Cherith Academy"
-              width={120}
-              height={120}
+              width={160}
+              height={160}
               className="object-contain"
             />
           </div>
