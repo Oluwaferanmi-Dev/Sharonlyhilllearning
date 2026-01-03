@@ -141,6 +141,26 @@
   a {
     @apply transition-all duration-200;
   }
+
+  html,
+  body {
+    @apply w-full overflow-x-hidden;
+  }
+
+  main {
+    @apply w-full;
+  }
+
+  /* Prevent horizontal scroll */
+  * {
+    @apply box-border;
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    @apply text-sm;
+  }
 }
 
 @layer utilities {
