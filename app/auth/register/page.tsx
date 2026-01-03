@@ -1,16 +1,28 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import Link from "next/link"
-import Image from "next/image"
+import type React from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import Link from "next/link";
+import Image from "next/image";
 
 const DEPARTMENTS = [
   "Clinical Services",
@@ -22,45 +34,88 @@ const DEPARTMENTS = [
   "Human Resources",
   "Finance",
   "Other",
-]
+];
+
+// NIN validation function
+const validateNIN = (nin: string): { isValid: boolean; message: string } => {
+  // Remove any whitespace
+  const cleanNIN = nin.trim();
+
+  // Check if NIN is exactly 11 digits
+  if (!/^\d{11}$/.test(cleanNIN)) {
+    return {
+      isValid: false,
+      message: "NIN must be exactly 11 digits",
+    };
+  }
+
+  return {
+    isValid: true,
+    message: "NIN is valid",
+  };
+};
 
 export default function RegisterPage() {
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [email, setEmail] = useState("")
-  const [nin, setNin] = useState("")
-  const [department, setDepartment] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [nin, setNin] = useState("");
+  const [ninError, setNinError] = useState<string | null>(null);
+  const [department, setDepartment] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  // Handle NIN input change with validation
+  const handleNinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNin(value);
+
+    // Show validation error only if user has started typing
+    if (value.length > 0) {
+      const validation = validateNIN(value);
+      setNinError(validation.isValid ? null : validation.message);
+    } else {
+      setNinError(null);
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
+
+    // Validate NIN before submission
+    const ninValidation = validateNIN(nin);
+    if (!ninValidation.isValid) {
+      setError(ninValidation.message);
+      return;
+    }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      return
+      setError("Passwords do not match");
+      return;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters")
-      return
+      setError("Password must be at least 8 characters");
+      return;
     }
 
-    const supabase = createClient()
-    setIsLoading(true)
+    const supabase = createClient();
+    setIsLoading(true);
 
     try {
-      console.log("[v0] Registration starting for email:", email)
+      console.log("[v0] Registration starting for email:", email);
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+          emailRedirectTo:
+            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+            `${window.location.origin}/dashboard`,
           data: {
             first_name: firstName,
             last_name: lastName,
@@ -69,25 +124,29 @@ export default function RegisterPage() {
             role: "staff",
           },
         },
-      })
+      });
 
-      if (authError) throw authError
-      if (!authData.user?.id) throw new Error("No user ID returned from signup")
+      if (authError) throw authError;
+      if (!authData.user?.id)
+        throw new Error("No user ID returned from signup");
 
-      console.log("[v0] Auth user created:", authData.user.id)
+      console.log("[v0] Auth user created:", authData.user.id);
 
-      // The error occurred because the trigger was already creating the profile with defaults,
-      // and this manual insert was conflicting (duplicate key).
-
-      console.log("[v0] Profile created successfully via trigger, redirecting...")
-      router.push("/auth/register-success")
+      console.log(
+        "[v0] Profile created successfully via trigger, redirecting..."
+      );
+      router.push("/auth/register-success");
     } catch (error: unknown) {
-      console.log("[v0] Registration error:", error)
-      setError(error instanceof Error ? error.message : "An error occurred during registration")
+      console.log("[v0] Registration error:", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred during registration"
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="w-full max-w-md">
@@ -103,10 +162,14 @@ export default function RegisterPage() {
                 className="object-contain"
               />
             </div>
-            <span className="font-semibold text-slate-900">Cherith Training Academy</span>
+            <span className="font-semibold text-slate-900">
+              Cherith Training Academy
+            </span>
           </div>
           <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>Register to begin your healthcare compliance assessment</CardDescription>
+          <CardDescription>
+            Register to begin your healthcare compliance assessment
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-3">
@@ -160,12 +223,16 @@ export default function RegisterPage() {
               </Label>
               <Input
                 id="nin"
-                placeholder="Enter your NIN"
+                placeholder="Enter your 11-digit NIN"
                 required
                 value={nin}
-                onChange={(e) => setNin(e.target.value)}
-                className="text-sm"
+                onChange={handleNinChange}
+                maxLength={11}
+                className={`text-sm ${ninError ? "border-red-500" : ""}`}
               />
+              {ninError && (
+                <p className="text-xs text-red-600 mt-1">{ninError}</p>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -214,20 +281,31 @@ export default function RegisterPage() {
               />
             </div>
 
-            {error && <p className="text-sm text-red-600 bg-red-50 p-3 rounded">{error}</p>}
+            {error && (
+              <p className="text-sm text-red-600 bg-red-50 p-3 rounded">
+                {error}
+              </p>
+            )}
 
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              disabled={isLoading || ninError !== null}
+            >
               {isLoading ? "Creating account..." : "Create Account"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm text-slate-600">
             Already have an account?{" "}
-            <Link href="/auth/login" className="text-blue-600 hover:underline font-semibold">
+            <Link
+              href="/auth/login"
+              className="text-blue-600 hover:underline font-semibold"
+            >
               Sign in
             </Link>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
