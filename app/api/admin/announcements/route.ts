@@ -1,9 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
+    const adminClient = await createAdminClient();
     const supabase = await createClient();
 
     const {
@@ -14,8 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin
-    const { data: profileData } = await supabase
+    const { data: profileData } = await adminClient
       .from("profiles")
       .select("role")
       .eq("id", user.id)
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data, error } = await supabase.from("announcements").insert([
+    const { data, error } = await adminClient.from("announcements").insert([
       {
         admin_id: user.id,
         title,
@@ -84,6 +84,7 @@ export async function GET() {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const adminClient = await createAdminClient();
     const supabase = await createClient();
 
     const {
@@ -94,8 +95,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin
-    const { data: profileData } = await supabase
+    const { data: profileData } = await adminClient
       .from("profiles")
       .select("role")
       .eq("id", user.id)
@@ -115,13 +115,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { error } = await supabase
+    // Use adminClient to delete announcement to bypass RLS
+    const { error: deleteError } = await adminClient
       .from("announcements")
       .delete()
       .eq("id", id);
 
-    if (error) {
-      throw error;
+    if (deleteError) {
+      throw deleteError;
     }
 
     return NextResponse.json({ success: true });
