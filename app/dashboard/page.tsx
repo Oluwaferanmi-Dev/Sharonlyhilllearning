@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { AssessmentProgress } from "@/components/assessment-progress";
 import { AssessmentCard } from "@/components/assessment-card";
+import { AnnouncementsDisplay } from "@/components/announcements-display";
 
 interface AssessmentLevel {
   id: string;
@@ -105,6 +106,12 @@ export default async function DashboardPage() {
     };
   });
 
+  const { data: announcements } = await supabase
+    .from("announcements")
+    .select("id, title, message, created_at")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
   return (
     <div className="px-4 sm:px-6 py-8 sm:py-12 space-y-6 sm:space-y-8">
       {/* Header */}
@@ -116,6 +123,10 @@ export default async function DashboardPage() {
           Continue your learning journey with our comprehensive assessments
         </p>
       </div>
+
+      {announcements && announcements.length > 0 && (
+        <AnnouncementsDisplay announcements={announcements} />
+      )}
 
       {/* Progress Overview */}
       <AssessmentProgress assessmentsByLevel={assessmentsByLevel} />

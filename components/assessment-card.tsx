@@ -1,30 +1,38 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { motion } from "framer-motion"
-import { Lock } from "lucide-react"
-import { ProgressRing } from "./progress-ring"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Lock } from "lucide-react";
+import { ProgressRing } from "./progress-ring";
 
 interface AssessmentCardProps {
-  levelId: string
-  name: string
-  description: string
-  completedCount: number
-  totalTopics: number
-  isLocked: boolean
-  onStart?: () => void
+  levelId: string;
+  name: string;
+  description: string;
+  completedCount: number;
+  totalTopics: number;
+  isLocked: boolean;
+  onStart?: () => void;
 }
 
 const TOPIC_OVERVIEWS: Record<string, { title: string; focus: string }> = {
   "Care, Treatment, and Services": {
     title: "Care, Treatment, and Services (CTS)",
-    focus: "patient pathway basics (assessment, care plan, treatment, follow-up), informed consent concepts.",
+    focus:
+      "patient pathway basics (assessment, care plan, treatment, follow-up), informed consent concepts.",
   },
   "Environment of Care": {
     title: "Environment of Care (EC)",
-    focus: "basics of safety in facilities (clean water, waste, fire exits, crowding).",
+    focus:
+      "basics of safety in facilities (clean water, waste, fire exits, crowding).",
   },
   "Emergency Management": {
     title: "Emergency Management (EM)",
@@ -33,7 +41,8 @@ const TOPIC_OVERVIEWS: Record<string, { title: string; focus: string }> = {
   },
   "Human Resources Management": {
     title: "Human Resources Management (HRM)",
-    focus: "basic awareness of required licenses, job descriptions, and orientation.",
+    focus:
+      "basic awareness of required licenses, job descriptions, and orientation.",
   },
   "Infection Prevention and Control": {
     title: "Infection Prevention and Control (IC)",
@@ -57,13 +66,14 @@ const TOPIC_OVERVIEWS: Record<string, { title: string; focus: string }> = {
   },
   "National Patient Safety Goals": {
     title: "National Patient Safety Goals (NPSG)",
-    focus: "simple safety goals (correct patient identification, communication, infection prevention).",
+    focus:
+      "simple safety goals (correct patient identification, communication, infection prevention).",
   },
   "Performance Improvement": {
     title: "Performance Improvement (PI)",
     focus: "understanding indicators and simple PDSA cycle basics.",
   },
-}
+};
 
 export function AssessmentCard({
   levelId,
@@ -74,8 +84,8 @@ export function AssessmentCard({
   isLocked,
   onStart,
 }: AssessmentCardProps) {
-  const progress = Math.round((completedCount / totalTopics) * 100)
-  const topicOverview = TOPIC_OVERVIEWS[name]
+  const progress = Math.round((completedCount / totalTopics) * 100);
+  const topicOverview = TOPIC_OVERVIEWS[name];
 
   return (
     <motion.div
@@ -122,9 +132,12 @@ export function AssessmentCard({
               transition={{ delay: 0.1 }}
               className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2"
             >
-              <p className="text-sm font-semibold text-blue-900">Pre-assessment focus</p>
+              <p className="text-sm font-semibold text-blue-900">
+                Pre-assessment focus
+              </p>
               <p className="text-sm text-blue-800">
-                <span className="font-medium">Beginner:</span> {topicOverview.focus}
+                <span className="font-medium">Beginner:</span>{" "}
+                {topicOverview.focus}
               </p>
             </motion.div>
           )}
@@ -136,8 +149,14 @@ export function AssessmentCard({
               transition={{ delay: 0.2 }}
               className="space-y-4 text-center py-8"
             >
-              <p className="text-sm text-slate-600">Admin payment required to unlock this assessment level.</p>
-              <Button variant="outline" className="w-full bg-transparent" disabled>
+              <p className="text-sm text-slate-600">
+                Admin payment required to unlock this assessment level.
+              </p>
+              <Button
+                variant="outline"
+                className="w-full bg-transparent"
+                disabled
+              >
                 <Lock className="w-4 h-4 mr-2" />
                 Locked
               </Button>
@@ -179,7 +198,10 @@ export function AssessmentCard({
               </div>
 
               <Link href={`/dashboard/assessments/${levelId}`}>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={onStart}>
+                <Button
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  onClick={onStart}
+                >
                   {completedCount > 0 ? "Continue Assessment" : "Start Topic"}
                 </Button>
               </Link>
@@ -188,5 +210,5 @@ export function AssessmentCard({
         </CardContent>
       </Card>
     </motion.div>
-  )
+  );
 }

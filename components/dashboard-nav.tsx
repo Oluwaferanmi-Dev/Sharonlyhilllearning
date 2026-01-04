@@ -68,6 +68,12 @@ export function DashboardNav({ user }: { user: User }) {
             >
               Assessments
             </Link>
+            <Link
+              href="/dashboard/announcements"
+              className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
+            >
+              Announcements
+            </Link>
           </div>
 
           {/* Desktop Right Section */}
@@ -113,6 +119,11 @@ export function DashboardNav({ user }: { user: User }) {
               <Link href="/dashboard/assessments" onClick={closeMobileMenu}>
                 <div className="px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-900">
                   Assessments
+                </div>
+              </Link>
+              <Link href="/dashboard/announcements" onClick={closeMobileMenu}>
+                <div className="px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-900">
+                  Announcements
                 </div>
               </Link>
             </div>
