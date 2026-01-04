@@ -96,6 +96,12 @@ export function AdminNav({ user }: { user: User | null }) {
               Staff
             </Link>
             <Link
+              href="/admin/announcements"
+              className="text-sm font-medium text-slate-700 hover:text-slate-900"
+            >
+              Announcements
+            </Link>
+            <Link
               href="/admin/assessments"
               className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
             >
@@ -154,6 +160,11 @@ export function AdminNav({ user }: { user: User | null }) {
               <Link href="/admin/staff" onClick={closeMobileMenu}>
                 <div className="px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-900">
                   Staff
+                </div>
+              </Link>
+              <Link href="/admin/announcements" onClick={closeMobileMenu}>
+                <div className="px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-900">
+                  Announcements
                 </div>
               </Link>
               <Link href="/admin/assessments" onClick={closeMobileMenu}>
