@@ -1,105 +1,46 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { type NextRequest, NextResponse } from "next/server";
 
 /**
- * Unlock an assessment level for all staff
- * Validates promo code and processes payment
- * NOTE: Only Beginner and Intermediate levels can be unlocked via this endpoint
+ * Get all assessment levels with their unlock status
  *
- * POST /api/admin/unlock-level
+ * GET /api/admin/unlocked-levels
  */
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { levelId, staffCount, promoCode } = body;
-
-    console.log("[v0] Unlock request:", { levelId, staffCount, promoCode });
-
-    const supabase = await createClient();
+    const adminClient = createAdminClient();
 
     // Get current user
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } = await adminClient.auth.getUser();
 
     if (userError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get level details
-    const { data: level, error: levelError } = await supabase
-      .from("assessment_levels")
-      .select("*")
-      .eq("id", levelId)
-      .single();
+    const { data: unlockedLevels, error: levelsError } = await adminClient
+      .from("level_unlocks")
+      .select("level_id, is_unlocked")
+      .order("level_id", { ascending: true });
 
-    if (levelError || !level) {
-      return NextResponse.json({ error: "Level not found" }, { status: 404 });
-    }
-
-    if (level.name !== "Beginner" && level.name !== "Intermediate") {
+    if (levelsError) {
+      console.error("[v0] Error fetching level unlocks:", levelsError);
       return NextResponse.json(
-        {
-          error: `${level.name} level cannot be unlocked. Only Beginner and Intermediate levels are available for purchase.`,
-        },
-        { status: 403 }
-      );
-    }
-
-    // Calculate payment
-    const pricePerStaff = level.price;
-    let totalAmount = staffCount * pricePerStaff;
-    let discount = 0;
-
-    if (promoCode && promoCode.toLowerCase() === "sharonlyhill") {
-      discount = totalAmount; // 100% discount
-      totalAmount = 0;
-    }
-
-    console.log("[v0] Payment calculation:", {
-      pricePerStaff,
-      staffCount,
-      totalAmount,
-      discount,
-    });
-
-    const { error: unlockError } = await supabase.from("level_unlocks").upsert(
-      {
-        level_id: levelId,
-        is_unlocked: true,
-        unlocked_at: new Date().toISOString(),
-      },
-      { onConflict: "level_id" }
-    );
-
-    if (unlockError) {
-      console.error("[v0] Error unlocking level:", unlockError);
-      return NextResponse.json(
-        { error: "Failed to unlock level" },
+        { error: "Failed to fetch levels" },
         { status: 500 }
       );
     }
 
-    console.log("[v0] Level unlocked successfully for all staff");
-
     return NextResponse.json(
-      {
-        success: true,
-        payment: {
-          pricePerStaff,
-          staffCount,
-          discount,
-          totalAmount,
-          promoCodeApplied: !!promoCode,
-        },
-      },
+      { unlockedLevels: unlockedLevels || [] },
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("[v0] Unlock level error:", error);
+    console.error("[v0] Get levels error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to unlock level" },
+      { error: error.message || "Failed to fetch levels" },
       { status: 500 }
     );
   }
