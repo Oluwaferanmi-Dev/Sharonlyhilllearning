@@ -53,6 +53,95 @@ const COMPLIANCE_DOMAINS = [
   { code: "WT", name: "Waived Testing" },
 ];
 
+const topicOverviews: Record<
+  string,
+  { code: string; beginnerFocus: string; intermediateFocus?: string }
+> = {
+  "Care, Treatment, and Services (CTS)": {
+    code: "CTS",
+    beginnerFocus:
+      "Beginner: patient pathway basics (assessment, care plan, treatment, follow-up), informed consent concepts.",
+    intermediateFocus:
+      "Intermediate: Individual care planning, risk assessment, and continuity of care with complex patient needs.",
+  },
+  "Environment of Care (EC)": {
+    code: "EC",
+    beginnerFocus:
+      "Beginner: basics of safety in facilities (clean water, waste, fire exits, crowding).",
+    intermediateFocus:
+      "Intermediate: Hazard surveillance systems, safety management, and preventive maintenance.",
+  },
+  "Emergency Management (EM)": {
+    code: "EM",
+    beginnerFocus:
+      "Beginner: knowledge of basic emergency types in Edo (outbreaks, mass casualty, fire) and the idea of a facility emergency plan.",
+    intermediateFocus:
+      "Intermediate: All-hazards planning, drills with lessons learned, and response coordination.",
+  },
+  "Human Resources Management (HRM)": {
+    code: "HRM",
+    beginnerFocus:
+      "Beginner: basic awareness of required licenses, job descriptions, and orientation.",
+    intermediateFocus:
+      "Intermediate: Competency verification, performance management, and credential tracking systems.",
+  },
+  "Infection Prevention and Control (IC)": {
+    code: "IC",
+    beginnerFocus:
+      "Beginner: hand hygiene, PPE basics, isolation basics, safe injection.",
+    intermediateFocus:
+      "Intermediate: Surveillance systems, outbreak investigation methods, and prevention strategy implementation.",
+  },
+  "Information Management (IM)": {
+    code: "IM",
+    beginnerFocus:
+      "Beginner: basic documentation rules, confidentiality, record legibility.",
+    intermediateFocus:
+      "Intermediate: Data quality, consistency verification, security protocols, and system validation.",
+  },
+  Leadership: {
+    code: "LD",
+    beginnerFocus:
+      "Beginner: awareness that each facility must have responsible leaders.",
+    intermediateFocus:
+      "Intermediate: Governance structures, accountability mechanisms, and safety culture development.",
+  },
+  "Life Safety (LS)": {
+    code: "LS",
+    beginnerFocus: "Beginner: fire exits, alarms, evacuation basics.",
+    intermediateFocus:
+      "Intermediate: Fire safety systems, egress design compliance, emergency procedures, and utility safety.",
+  },
+  "Medication Management (MM)": {
+    code: "MM",
+    beginnerFocus:
+      "Beginner: storage, labelling, expiry checking, controlled drugs basics.",
+    intermediateFocus:
+      "Intermediate: Selection criteria, high-alert medication safeguards, and error prevention systems.",
+  },
+  "National Patient Safety Goals (NPSG)": {
+    code: "NPSG",
+    beginnerFocus:
+      "Beginner: simple safety goals (correct patient identification, communication, infection prevention).",
+    intermediateFocus:
+      "Intermediate: Multi-faceted safety systems, equitable outcome measurement, and reduction of healthcare-associated harms.",
+  },
+  "Performance Improvement (PI)": {
+    code: "PI",
+    beginnerFocus:
+      "Beginner: understanding indicators and simple PDSA cycle basics.",
+    intermediateFocus:
+      "Intermediate: Data-driven improvement, measurement systems, and sustainability of changes.",
+  },
+  "Accreditation Participation Requirements (APR)": {
+    code: "APR",
+    beginnerFocus:
+      "Beginner: foundational understanding of accreditation requirements.",
+    intermediateFocus:
+      "Intermediate: Accreditation cooperation, truthful communication obligations, and reporting requirements.",
+  },
+};
+
 export default function AssessmentLevelPage() {
   const params = useParams();
   const levelId = params.levelId as string;
@@ -161,66 +250,6 @@ export default function AssessmentLevelPage() {
       </div>
     );
   }
-
-  const topicOverviews: Record<
-    string,
-    { code: string; beginnerFocus: string }
-  > = {
-    "Care, Treatment, and Services (CTS)": {
-      code: "CTS",
-      beginnerFocus:
-        "Beginner: patient pathway basics (assessment, care plan, treatment, follow-up), informed consent concepts.",
-    },
-    "Environment of Care (EC)": {
-      code: "EC",
-      beginnerFocus:
-        "Beginner: basics of safety in facilities (clean water, waste, fire exits, crowding).",
-    },
-    "Emergency Management (EM)": {
-      code: "EM",
-      beginnerFocus:
-        "Beginner: knowledge of basic emergency types in Edo (outbreaks, mass casualty, fire) and the idea of a facility emergency plan.",
-    },
-    "Human Resources Management (HRM)": {
-      code: "HRM",
-      beginnerFocus:
-        "Beginner: basic awareness of required licenses, job descriptions, and orientation.",
-    },
-    "Infection Prevention and Control (IC)": {
-      code: "IC",
-      beginnerFocus:
-        "Beginner: hand hygiene, PPE basics, isolation basics, safe injection.",
-    },
-    "Information Management (IM)": {
-      code: "IM",
-      beginnerFocus:
-        "Beginner: basic documentation rules, confidentiality, record legibility.",
-    },
-    Leadership: {
-      code: "LD",
-      beginnerFocus:
-        "Beginner: awareness that each facility must have responsible leaders.",
-    },
-    "Life Safety (LS)": {
-      code: "LS",
-      beginnerFocus: "Beginner: fire exits, alarms, evacuation basics.",
-    },
-    "Medication Management (MM)": {
-      code: "MM",
-      beginnerFocus:
-        "Beginner: storage, labelling, expiry checking, controlled drugs basics.",
-    },
-    "National Patient Safety Goals (NPSG)": {
-      code: "NPSG",
-      beginnerFocus:
-        "Beginner: simple safety goals (correct patient identification, communication, infection prevention).",
-    },
-    "Performance Improvement (PI)": {
-      code: "PI",
-      beginnerFocus:
-        "Beginner: understanding indicators and simple PDSA cycle basics.",
-    },
-  };
 
   return (
     <div className="px-6 py-12 space-y-8">
@@ -379,6 +408,11 @@ export default function AssessmentLevelPage() {
                 topic.description || "Assessment content for this topic",
             };
 
+            const focusText =
+              level.name === "Intermediate" && overview.intermediateFocus
+                ? overview.intermediateFocus
+                : overview.beginnerFocus || topic.description;
+
             return (
               <motion.div
                 key={topic.id}
@@ -395,10 +429,10 @@ export default function AssessmentLevelPage() {
                         <CardTitle className="text-lg">{topic.name}</CardTitle>
                       </div>
                       <p className="text-xs font-semibold text-slate-600">
-                        Pre-assessment focus
+                        {level.name} level assessment focus
                       </p>
                       <p className="text-sm text-slate-700 leading-relaxed">
-                        {overview.beginnerFocus}
+                        {focusText}
                       </p>
                     </div>
                   </CardHeader>
