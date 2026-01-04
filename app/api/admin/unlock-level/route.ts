@@ -3,28 +3,17 @@ import { type NextRequest, NextResponse } from "next/server";
 
 /**
  * Unlock an assessment level for all staff
- * Supports both payment and coupon code methods
- * NOTE: Only Beginner level can be unlocked via this endpoint
+ * Validates promo code and processes payment
+ * NOTE: Only Beginner and Intermediate levels can be unlocked via this endpoint
  *
  * POST /api/admin/unlock-level
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      levelId,
-      staffCount,
-      promoCode,
-      unlockMethod = "payment",
-      couponCode,
-    } = body;
+    const { levelId, staffCount, promoCode } = body;
 
-    console.log("[v0] Unlock request:", {
-      levelId,
-      staffCount,
-      unlockMethod,
-      couponCode,
-    });
+    console.log("[v0] Unlock request:", { levelId, staffCount, promoCode });
 
     const supabase = await createClient();
 
@@ -49,49 +38,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Level not found" }, { status: 404 });
     }
 
-    if (level.name !== "Beginner") {
+    if (level.name !== "Beginner" && level.name !== "Intermediate") {
       return NextResponse.json(
         {
-          error: `${level.name} level cannot be unlocked. Only Beginner level is available for purchase.`,
+          error: `${level.name} level cannot be unlocked. Only Beginner and Intermediate levels are available for purchase.`,
         },
         { status: 403 }
       );
     }
 
-    if (unlockMethod === "coupon") {
-      if (!couponCode) {
-        return NextResponse.json(
-          { error: "Coupon code is required" },
-          { status: 400 }
-        );
-      }
+    // Calculate payment
+    const pricePerStaff = level.price;
+    let totalAmount = staffCount * pricePerStaff;
+    let discount = 0;
 
-      // Validate coupon code (hardcoded for now, can be extended to database)
-      if (couponCode.toLowerCase() !== "sharonllyhill") {
-        return NextResponse.json(
-          { error: "This coupon code is unavailable" },
-          { status: 400 }
-        );
-      }
-
-      console.log("[v0] Valid coupon code provided, unlocking level");
-    } else {
-      const pricePerStaff = level.price;
-      let totalAmount = staffCount * pricePerStaff;
-      let discount = 0;
-
-      if (promoCode && promoCode.toLowerCase() === "sharonlyhill") {
-        discount = totalAmount; // 100% discount
-        totalAmount = 0;
-      }
-
-      console.log("[v0] Payment calculation:", {
-        pricePerStaff,
-        staffCount,
-        totalAmount,
-        discount,
-      });
+    if (promoCode && promoCode.toLowerCase() === "sharonlyhill") {
+      discount = totalAmount; // 100% discount
+      totalAmount = 0;
     }
+
+    console.log("[v0] Payment calculation:", {
+      pricePerStaff,
+      staffCount,
+      totalAmount,
+      discount,
+    });
 
     const { error: unlockError } = await supabase.from("level_unlocks").upsert(
       {
@@ -110,13 +81,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[v0] Level unlocked successfully via", unlockMethod);
+    console.log("[v0] Level unlocked successfully for all staff");
 
     return NextResponse.json(
       {
         success: true,
-        unlockMethod,
-        message: `${level.name} level unlocked successfully via ${unlockMethod}`,
+        payment: {
+          pricePerStaff,
+          staffCount,
+          discount,
+          totalAmount,
+          promoCodeApplied: !!promoCode,
+        },
       },
       { status: 200 }
     );

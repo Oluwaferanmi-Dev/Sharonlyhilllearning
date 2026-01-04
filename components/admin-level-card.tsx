@@ -25,7 +25,7 @@ export function AdminLevelCard({
   onUnlockClick,
   index = 0,
 }: AdminLevelCardProps) {
-  const canUnlock = name === "Beginner";
+  const canUnlock = name === "Beginner" || name === "Intermediate";
 
   return (
     <motion.div
