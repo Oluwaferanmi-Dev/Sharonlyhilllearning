@@ -1,5 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { createAdminClient } from "@/lib/supabase/server";
 import {
   Card,
   CardContent,
@@ -11,46 +10,36 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default async function AdminAssessmentsPage() {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth/login");
-  }
-
-  const { data: allAssessments } = await supabase
+  const { data: allAssessments, error } = await supabase
     .from("user_assessments")
-    .select("*")
+    .select(
+      `
+      *,
+      profiles(id, first_name, last_name, email),
+      assessment_levels(id, name)
+    `
+    )
     .order("updated_at", { ascending: false });
 
-  // Fetch profiles separately to avoid foreign key issues
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, first_name, last_name, email");
+  console.log("[v0] Assessments Query - Error:", error);
+  console.log(
+    "[v0] Assessments Query - Data:",
+    allAssessments?.length,
+    "records"
+  );
+  if (allAssessments && allAssessments.length > 0) {
+    console.log("[v0] First Assessment:", allAssessments[0]);
+  }
 
-  // Fetch assessment levels separately
-  const { data: assessmentLevels } = await supabase
-    .from("assessment_levels")
-    .select("id, name");
-
-  // Map the data together
-  const enrichedAssessments =
-    allAssessments?.map((assessment: any) => ({
-      ...assessment,
-      profiles: profiles?.find((p: any) => p.id === assessment.user_id),
-      assessment_levels: assessmentLevels?.find(
-        (l: any) => l.id === assessment.level_id
-      ),
-    })) || [];
+  // Map the data (already enriched from Supabase joins)
+  const enrichedAssessments = allAssessments || [];
 
   const completedAssessments =
     enrichedAssessments.filter((a) => a.status === "completed") || [];
   const inProgressAssessments =
     enrichedAssessments.filter((a) => a.status === "in_progress") || [];
-  console.log(enrichedAssessments);
 
   return (
     <div className="px-6 py-12 space-y-8">
