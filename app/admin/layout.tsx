@@ -1,6 +1,6 @@
 import type React from "react";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { AdminNav } from "@/components/admin-nav";
 
@@ -9,14 +9,21 @@ export default async function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
+  const supabase = createAdminClient();
+  const {
+    data: { users },
+  } = await supabase.auth.admin.listUsers();
+
+  // Since we can't get user from createAdminClient, we need to verify differently
+  // Get the user from regular client for auth check
+  const { createClient } = await import("@/lib/supabase/server");
+  const userClient = await createClient();
+  const { data } = await userClient.auth.getUser();
 
   if (!data?.user) {
     redirect("/auth/login");
   }
 
-  // Fetch the user's role from the database
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
