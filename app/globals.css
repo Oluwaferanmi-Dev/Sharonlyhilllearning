@@ -164,6 +164,30 @@
 }
 
 @layer utilities {
+  /* Add assessment protection styles */
+  .assessment-protected {
+    @apply select-none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  .assessment-protected::selection {
+    background-color: transparent;
+  }
+
+  .assessment-protected::-moz-selection {
+    background-color: transparent;
+  }
+
+  /* Prevent printing of assessment content */
+  @media print {
+    .assessment-protected {
+      display: none;
+    }
+  }
+
   /* Utility for respecting prefers-reduced-motion */
   @media (prefers-reduced-motion: reduce) {
     /* Disable animations for users who prefer reduced motion */
