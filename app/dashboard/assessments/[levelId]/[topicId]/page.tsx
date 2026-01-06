@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { initAssessmentProtection } from "@/lib/utils/assessment-protection";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -45,6 +46,11 @@ export default function QuizPage() {
   const [score, setScore] = useState(0);
 
   const supabase = createClient();
+
+  useEffect(() => {
+    const cleanup = initAssessmentProtection();
+    return cleanup;
+  }, []);
 
   useEffect(() => {
     const loadQuiz = async () => {
@@ -169,7 +175,7 @@ export default function QuizPage() {
 
   if (isLoading) {
     return (
-      <div className="px-4 sm:px-6 py-8 sm:py-12 text-center">
+      <div className="px-6 py-12 text-center">
         <p className="text-slate-600">Loading quiz...</p>
       </div>
     );
@@ -177,7 +183,7 @@ export default function QuizPage() {
 
   if (showResults) {
     return (
-      <div className="px-4 sm:px-6 py-8 sm:py-12 max-w-2xl mx-auto">
+      <div className="px-6 py-12 max-w-2xl mx-auto">
         <Card
           className={
             score >= 70
@@ -197,10 +203,10 @@ export default function QuizPage() {
               {topic?.name}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 sm:space-y-6">
+          <CardContent className="space-y-6">
             <div className="text-center">
               <p
-                className={`text-4xl sm:text-5xl font-bold ${
+                className={`text-5xl font-bold ${
                   score >= 70 ? "text-green-600" : "text-red-600"
                 }`}
               >
@@ -215,57 +221,55 @@ export default function QuizPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 text-center">
+            <div className="grid grid-cols-2 gap-4 text-center">
               <div>
-                <p className="text-xl sm:text-2xl font-bold text-slate-900">
+                <p className="text-2xl font-bold text-slate-900">
                   {
                     questions.filter((q) => answers[q.id] === q.correct_answer)
                       .length
                   }
                 </p>
-                <p className="text-xs sm:text-sm text-slate-600">Correct</p>
+                <p className="text-sm text-slate-600">Correct</p>
               </div>
               <div>
-                <p className="text-xl sm:text-2xl font-bold text-slate-900">
+                <p className="text-2xl font-bold text-slate-900">
                   {
                     questions.filter((q) => answers[q.id] !== q.correct_answer)
                       .length
                   }
                 </p>
-                <p className="text-xs sm:text-sm text-slate-600">Incorrect</p>
+                <p className="text-sm text-slate-600">Incorrect</p>
               </div>
             </div>
 
             <div className="bg-white rounded-lg p-4 space-y-2">
-              <p className="font-semibold text-slate-900 text-sm">
-                Results Summary
-              </p>
-              <p className="text-xs sm:text-sm text-slate-700">
+              <p className="font-semibold text-slate-900">Results Summary</p>
+              <p className="text-sm text-slate-700">
                 You answered {Object.keys(answers).length} out of{" "}
                 {questions.length} questions.
               </p>
               {score >= 70 && (
-                <p className="text-xs sm:text-sm text-green-700 font-semibold">
+                <p className="text-sm text-green-700 font-semibold">
                   Congratulations! You passed this assessment.
                 </p>
               )}
               {score < 70 && (
-                <p className="text-xs sm:text-sm text-red-700 font-semibold">
+                <p className="text-sm text-red-700 font-semibold">
                   Please review the material and try again.
                 </p>
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="flex gap-4">
               <Button
                 variant="outline"
-                className="flex-1 bg-transparent text-sm sm:text-base"
+                className="flex-1 bg-transparent"
                 onClick={() => router.push(`/dashboard/assessments/${levelId}`)}
               >
                 Back to Level
               </Button>
               <Button
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-sm sm:text-base"
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
                 onClick={() => router.push("/dashboard")}
               >
                 Go to Dashboard
@@ -279,7 +283,7 @@ export default function QuizPage() {
 
   if (!questions.length) {
     return (
-      <div className="px-4 sm:px-6 py-8 sm:py-12 text-center">
+      <div className="px-6 py-12 text-center">
         <p className="text-slate-600">No questions found for this topic.</p>
       </div>
     );
@@ -291,11 +295,11 @@ export default function QuizPage() {
   );
 
   return (
-    <div className="px-4 sm:px-6 py-8 sm:py-12 max-w-2xl mx-auto space-y-6 sm:space-y-8">
+    <div className="px-6 py-12 max-w-2xl mx-auto space-y-8">
       {/* Back button */}
       <Button
         variant="outline"
-        className="mb-4 bg-transparent text-sm sm:text-base"
+        className="mb-4 bg-transparent"
         onClick={() => router.back()}
       >
         ← Back
@@ -303,17 +307,15 @@ export default function QuizPage() {
 
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-          {topic?.name}
-        </h1>
-        <p className="text-sm sm:text-base text-slate-600">
+        <h1 className="text-3xl font-bold text-slate-900">{topic?.name}</h1>
+        <p className="text-slate-600">
           Question {currentQuestionIndex + 1} of {questions.length}
         </p>
       </div>
 
       {/* Progress bar */}
       <div className="space-y-2">
-        <div className="flex justify-between text-xs sm:text-sm">
+        <div className="flex justify-between text-sm">
           <span className="text-slate-600">Progress</span>
           <span className="font-semibold text-slate-900">{progress}%</span>
         </div>
@@ -325,10 +327,9 @@ export default function QuizPage() {
         </div>
       </div>
 
-      {/* Question Card */}
-      <Card>
+      <Card className="assessment-protected">
         <CardHeader>
-          <CardTitle className="text-base sm:text-lg">
+          <CardTitle className="text-lg">
             {currentQuestion.question_text}
           </CardTitle>
         </CardHeader>
@@ -339,7 +340,7 @@ export default function QuizPage() {
               handleAnswerChange(currentQuestion.id, value)
             }
           >
-            <div className="space-y-3">
+            <div className="space-y-4">
               {[
                 { value: "A", label: currentQuestion.option_a },
                 { value: "B", label: currentQuestion.option_b },
@@ -348,16 +349,12 @@ export default function QuizPage() {
               ].map((option) => (
                 <div
                   key={option.value}
-                  className="flex items-start space-x-3 p-3 rounded-lg hover:bg-slate-50"
+                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-50"
                 >
-                  <RadioGroupItem
-                    value={option.value}
-                    id={option.value}
-                    className="mt-1"
-                  />
+                  <RadioGroupItem value={option.value} id={option.value} />
                   <Label
                     htmlFor={option.value}
-                    className="flex-1 cursor-pointer text-sm sm:text-base"
+                    className="flex-1 cursor-pointer"
                   >
                     <strong>{option.value}.</strong> {option.label}
                   </Label>
@@ -369,14 +366,14 @@ export default function QuizPage() {
       </Card>
 
       {/* Navigation Buttons */}
-      <div className="flex gap-3 sm:gap-4">
+      <div className="flex gap-4">
         <Button
           variant="outline"
           onClick={() =>
             setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))
           }
           disabled={currentQuestionIndex === 0}
-          className="flex-1 text-sm sm:text-base"
+          className="flex-1"
         >
           Previous
         </Button>
@@ -385,7 +382,7 @@ export default function QuizPage() {
           <Button
             onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
             disabled={!answers[currentQuestion.id]}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-sm sm:text-base"
+            className="flex-1 bg-blue-600 hover:bg-blue-700"
           >
             Next
           </Button>
@@ -397,7 +394,7 @@ export default function QuizPage() {
               isSubmitting ||
               Object.keys(answers).length !== questions.length
             }
-            className="flex-1 bg-green-600 hover:bg-green-700 text-sm sm:text-base"
+            className="flex-1 bg-green-600 hover:bg-green-700"
           >
             {isSubmitting ? "Submitting..." : "Submit Quiz"}
           </Button>
@@ -415,7 +412,7 @@ export default function QuizPage() {
               <button
                 key={q.id}
                 onClick={() => setCurrentQuestionIndex(idx)}
-                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg font-semibold transition-colors text-xs sm:text-sm ${
+                className={`w-10 h-10 rounded-lg font-semibold transition-colors ${
                   answers[q.id]
                     ? "bg-blue-600 text-white"
                     : "bg-slate-200 text-slate-600 hover:bg-slate-300"
