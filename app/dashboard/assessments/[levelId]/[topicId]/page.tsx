@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { initAssessmentProtection } from "@/lib/utils/assessment-protection";
 import {
   Card,
   CardContent,
@@ -45,6 +46,11 @@ export default function QuizPage() {
   const [score, setScore] = useState(0);
 
   const supabase = createClient();
+
+  useEffect(() => {
+    const cleanup = initAssessmentProtection();
+    return cleanup;
+  }, []);
 
   useEffect(() => {
     const loadQuiz = async () => {
@@ -322,7 +328,7 @@ export default function QuizPage() {
       </div>
 
       {/* Question Card */}
-      <Card>
+      <Card className="assessment-protected">
         <CardHeader>
           <CardTitle className="text-lg">
             {currentQuestion.question_text}
