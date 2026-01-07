@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import {
   Card,
@@ -42,21 +42,21 @@ export default async function DashboardPage() {
     redirect("/auth/login");
   }
 
-  const { data: profileData } = await supabase
+  const adminClient = createAdminClient();
+  const { data: profileData, error: profileError } = await adminClient
     .from("profiles")
-    .select("role")
+    .select("id, first_name, last_name, email, role, department, created_at")
     .eq("id", user.id)
     .single();
+
+  console.log("[v0] Profile fetch error:", profileError);
+  console.log("[v0] Profile data:", profileData);
+
   if (profileData?.role === "admin") {
     redirect("/admin");
   }
 
-  // Fetch user profile
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id);
-  const profile = profiles?.[0];
+  const profile = profileData || { first_name: "Student" };
 
   const { data: levelUnlocks } = await supabase
     .from("level_unlocks")
@@ -68,13 +68,11 @@ export default async function DashboardPage() {
       .map((u: LevelUnlock) => u.level_id)
   );
 
-  // Fetch assessment levels
   const { data: levels } = await supabase
     .from("assessment_levels")
     .select("*")
     .order("order_index");
 
-  // Fetch user assessments
   const { data: userAssessments } = await supabase
     .from("user_assessments")
     .select("*")
@@ -110,16 +108,30 @@ export default async function DashboardPage() {
     .from("announcements")
     .select("id, title, message, created_at")
     .eq("is_active", true)
+    .not(
+      "id",
+      "in",
+      `(${
+        (
+          await supabase
+            .from("dismissed_announcements")
+            .select("announcement_id")
+            .eq("user_id", user.id)
+        ).data
+          ?.map((d) => d.announcement_id)
+          .join(",") || ""
+      })`
+    )
     .order("created_at", { ascending: false });
 
   return (
-    <div className="px-4 sm:px-6 py-8 sm:py-12 space-y-6 sm:space-y-8">
+    <div className="px-6 py-12 space-y-8">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
+        <h1 className="text-4xl font-bold text-slate-900">
           Welcome, {profile?.first_name || "Student"}
         </h1>
-        <p className="text-sm sm:text-base text-slate-600">
+        <p className="text-slate-600">
           Continue your learning journey with our comprehensive assessments
         </p>
       </div>
@@ -135,15 +147,13 @@ export default async function DashboardPage() {
       <div>
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg sm:text-xl">
-              Assessment Levels
-            </CardTitle>
+            <CardTitle>Assessment Levels</CardTitle>
             <CardDescription>
               Progress through each level to complete your training
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid md:grid-cols-2 gap-6">
               {assessmentsByLevel.map(
                 ({ level, total, completed, isLocked }) => (
                   <AssessmentCard
@@ -163,30 +173,27 @@ export default async function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div>
+      {/* <div>
         <h2 className="text-lg font-semibold text-slate-900 mb-4">
           Quick Actions
         </h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
-          <Link href="/dashboard/assessments" className="w-full">
-            <Button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-sm sm:text-base"
-              size="lg"
-            >
+        <div className="grid md:grid-cols-2 gap-4">
+          <Link href="/dashboard/assessments">
+            <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
               View All Assessments
             </Button>
           </Link>
-          <Link href="/profile" className="w-full">
+          <Link href="/profile">
             <Button
               variant="outline"
-              className="w-full bg-transparent text-sm sm:text-base"
+              className="w-full bg-transparent"
               size="lg"
             >
               Edit Profile
             </Button>
           </Link>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
