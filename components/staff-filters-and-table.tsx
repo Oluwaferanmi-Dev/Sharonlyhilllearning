@@ -116,30 +116,30 @@ export default function StaffFiltersAndTable({
         </div>
       </div>
 
-      {/* Table - Horizontal scroll on mobile */}
-      <div className="rounded-lg border border-slate-200 overflow-x-auto -mx-4 sm:mx-0">
-        <table className="w-full min-w-[800px]">
+      {/* Desktop Table - Hidden on mobile */}
+      <div className="hidden lg:block rounded-lg border border-slate-200 overflow-hidden">
+        <table className="w-full">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
-              <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-900">
+              <th className="text-left px-6 py-3 text-sm font-semibold text-slate-900">
                 Picture
               </th>
-              <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-900">
+              <th className="text-left px-6 py-3 text-sm font-semibold text-slate-900">
                 Name
               </th>
-              <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-900">
+              <th className="text-left px-6 py-3 text-sm font-semibold text-slate-900">
                 Email
               </th>
-              <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-900">
+              <th className="text-left px-6 py-3 text-sm font-semibold text-slate-900">
                 Department
               </th>
-              <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-900">
+              <th className="text-left px-6 py-3 text-sm font-semibold text-slate-900">
                 Topics
               </th>
-              <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-900">
+              <th className="text-left px-6 py-3 text-sm font-semibold text-slate-900">
                 Joined
               </th>
-              <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-900">
+              <th className="text-left px-6 py-3 text-sm font-semibold text-slate-900">
                 Actions
               </th>
             </tr>
@@ -149,7 +149,7 @@ export default function StaffFiltersAndTable({
               <tr>
                 <td
                   colSpan={7}
-                  className="px-3 sm:px-6 py-8 text-center text-slate-500 text-sm"
+                  className="px-6 py-8 text-center text-slate-500 text-sm"
                 >
                   {selectedDepartment !== "all"
                     ? `No staff members in ${selectedDepartment} department`
@@ -171,42 +171,41 @@ export default function StaffFiltersAndTable({
                   key={staff.id}
                   className="hover:bg-slate-50 transition-colors"
                 >
-                  <td className="px-3 sm:px-6 py-4">
-                    <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
+                  <td className="px-6 py-4">
+                    <Avatar className="w-10 h-10">
                       <AvatarImage
                         src={staff.profile_picture_url || ""}
                         alt={`${staff.first_name} ${staff.last_name}`}
                       />
-                      <AvatarFallback className="bg-blue-100 text-blue-700 font-semibold text-xs sm:text-sm">
+                      <AvatarFallback className="bg-blue-100 text-blue-700 font-semibold text-sm">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
                   </td>
-                  <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm font-medium text-slate-900 whitespace-nowrap">
+                  <td className="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">
                     {staff.first_name} {staff.last_name}
                   </td>
-                  <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-slate-600">
+                  <td className="px-6 py-4 text-sm text-slate-600">
                     {staff.email}
                   </td>
-                  <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-slate-600 whitespace-nowrap">
+                  <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap">
                     {staff.department}
                   </td>
-                  <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-slate-600 whitespace-nowrap">
+                  <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap">
                     {completed}/{staffAssessments.length} completed
                   </td>
-                  <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-slate-600 whitespace-nowrap">
+                  <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap">
                     {new Date(staff.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-3 sm:px-6 py-4">
+                  <td className="px-6 py-4">
                     <Link href={`/admin/staff/${staff.id}`}>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="bg-transparent text-xs sm:text-sm"
+                        className="bg-transparent"
                       >
-                        <span className="hidden sm:inline">View Details</span>
-                        <span className="sm:hidden">View</span>
-                        <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
+                        View Details
+                        <ChevronRight className="w-4 h-4 ml-1" />
                       </Button>
                     </Link>
                   </td>
@@ -215,6 +214,88 @@ export default function StaffFiltersAndTable({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View - Visible only on mobile */}
+      <div className="lg:hidden space-y-4">
+        {filteredAndSortedStaff.length === 0 ? (
+          <div className="text-center py-8 text-slate-500 text-sm">
+            {selectedDepartment !== "all"
+              ? `No staff members in ${selectedDepartment} department`
+              : "No staff members have registered yet"}
+          </div>
+        ) : (
+          filteredAndSortedStaff.map((staff) => {
+            const staffAssessments =
+              allAssessments.filter((a) => a.user_id === staff.id) || [];
+            const completed = staffAssessments.filter(
+              (a) => a.status === "completed"
+            ).length;
+            const initials =
+              `${staff.first_name[0]}${staff.last_name[0]}`.toUpperCase();
+
+            return (
+              <div
+                key={staff.id}
+                className="border border-slate-200 rounded-lg p-4 space-y-4 bg-white hover:shadow-md transition-shadow"
+              >
+                {/* Header with Avatar and Name */}
+                <div className="flex items-center gap-3">
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage
+                      src={staff.profile_picture_url || ""}
+                      alt={`${staff.first_name} ${staff.last_name}`}
+                    />
+                    <AvatarFallback className="bg-blue-100 text-blue-700 font-semibold text-sm">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-900 truncate">
+                      {staff.first_name} {staff.last_name}
+                    </p>
+                    <p className="text-sm text-slate-600 truncate">
+                      {staff.email}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-200">
+                  <div>
+                    <p className="text-xs text-slate-600 mb-1">Department</p>
+                    <p className="text-sm font-medium text-slate-900 truncate">
+                      {staff.department}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-600 mb-1">Topics</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {completed}/{staffAssessments.length}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-600 mb-1">Joined</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {new Date(staff.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <Link href={`/admin/staff/${staff.id}`} className="block">
+                  <Button
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    size="sm"
+                  >
+                    View Details
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+            );
+          })
+        )}
       </div>
     </>
   );
