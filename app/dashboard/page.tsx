@@ -31,6 +31,17 @@ interface LevelUnlock {
   is_unlocked: boolean;
 }
 
+interface Profile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+  department: string;
+  created_at: string;
+  profile_picture_url: string | null;
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
 
@@ -45,7 +56,9 @@ export default async function DashboardPage() {
   const adminClient = createAdminClient();
   const { data: profileData, error: profileError } = await adminClient
     .from("profiles")
-    .select("id, first_name, last_name, email, role, department, created_at")
+    .select(
+      "id, first_name, last_name, email, role, department, created_at, profile_picture_url"
+    )
     .eq("id", user.id)
     .single();
 
@@ -56,7 +69,16 @@ export default async function DashboardPage() {
     redirect("/admin");
   }
 
-  const profile = profileData || { first_name: "Student" };
+  const profile: Profile = profileData || {
+    id: user.id,
+    first_name: "Student",
+    last_name: "",
+    email: user.email || "",
+    role: "user",
+    department: "",
+    created_at: new Date().toISOString(),
+    profile_picture_url: null,
+  };
 
   const { data: levelUnlocks } = await supabase
     .from("level_unlocks")
@@ -126,14 +148,30 @@ export default async function DashboardPage() {
 
   return (
     <div className="px-6 py-12 space-y-8">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-4xl font-bold text-slate-900">
-          Welcome, {profile?.first_name || "Student"}
-        </h1>
-        <p className="text-slate-600">
-          Continue your learning journey with our comprehensive assessments
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:gap-8 gap-4">
+        {profile?.profile_picture_url && (
+          <img
+            src={profile.profile_picture_url || "/placeholder.svg"}
+            alt={`${profile?.first_name} profile`}
+            className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-blue-600 shadow-lg flex-shrink-0"
+          />
+        )}
+        {!profile?.profile_picture_url && (
+          <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-3xl md:text-4xl border-4 border-blue-600 shadow-lg flex-shrink-0">
+            {profile?.first_name?.[0]}
+            {profile?.last_name?.[0]}
+          </div>
+        )}
+
+        {/* Header text */}
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold text-slate-900">
+            Welcome, {profile?.first_name || "Student"}
+          </h1>
+          <p className="text-slate-600">
+            Continue your learning journey with our comprehensive assessments
+          </p>
+        </div>
       </div>
 
       {announcements && announcements.length > 0 && (
