@@ -18,6 +18,7 @@ interface StaffMember {
   department: string;
   created_at: string;
   role: string;
+  profile_picture_url?: string;
 }
 
 interface Assessment {
@@ -30,7 +31,9 @@ export default async function AdminStaffPage() {
 
   const { data: staffProfiles, error: staffError } = await adminClient
     .from("profiles")
-    .select("*")
+    .select(
+      "id, first_name, last_name, email, department, created_at, role, profile_picture_url"
+    )
     .eq("role", "staff")
     .order("created_at", { ascending: false });
 
@@ -48,11 +51,11 @@ export default async function AdminStaffPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
             Staff Management
           </h1>
-          <p className="text-slate-600 mt-2 text-sm sm:text-base">
+          <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">
             View and manage all registered staff members
           </p>
         </div>
-        <Link href="/admin">
+        <Link href="/admin" className="w-full sm:w-auto">
           <Button variant="outline" className="bg-transparent w-full sm:w-auto">
             Back to Dashboard
           </Button>

@@ -21,6 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ProfilePictureUpload from "@/components/profile-picture-upload";
+import { uploadProfilePicture } from "@/lib/utils/file-upload";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -44,9 +46,20 @@ export default function RegisterPage() {
   const [department, setDepartment] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [profileFile, setProfileFile] = useState<File | null>(null);
+  const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  const handleFileSelect = (file: File) => {
+    setProfileFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfilePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,14 +104,17 @@ export default function RegisterPage() {
 
       console.log("[v0] Auth user created:", authData.user.id);
 
-      if (authError?.message?.includes("already registered")) {
-        throw new Error(
-          "This email is already registered as an admin. Each email can only be used for one role."
+      if (profileFile) {
+        console.log("[v0] Uploading profile picture...");
+        const uploadResult = await uploadProfilePicture(
+          authData.user.id,
+          profileFile
         );
-      }
 
-      // The error occurred because the trigger was already creating the profile with defaults,
-      // and this manual insert was conflicting (duplicate key).
+        if (uploadResult) {
+          console.log("[v0] Profile picture uploaded successfully");
+        }
+      }
 
       console.log(
         "[v0] Profile created successfully via trigger, redirecting..."
@@ -216,6 +232,12 @@ export default function RegisterPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            <ProfilePictureUpload
+              onFileSelect={handleFileSelect}
+              preview={profilePreview}
+              isLoading={isLoading}
+            />
 
             <div className="space-y-1">
               <Label htmlFor="password" className="text-sm">
