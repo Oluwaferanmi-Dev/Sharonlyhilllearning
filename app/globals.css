@@ -181,6 +181,27 @@
     background-color: transparent;
   }
 
+  /* Add blur effect when screen recording is detected */
+  .assessment-recording-detected {
+    filter: blur(8px);
+    pointer-events: none;
+  }
+
+  /* Recording warning badge */
+  .recording-warning {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: rgb(239, 68, 68);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 9999;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
   /* Prevent printing of assessment content */
   @media print {
     .assessment-protected {

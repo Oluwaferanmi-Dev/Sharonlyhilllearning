@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { initAssessmentProtection } from "@/lib/utils/assessment-protection";
+import { initRecordingDetection } from "@/lib/utils/recording-detection";
 import {
   Card,
   CardContent,
@@ -44,12 +45,27 @@ export default function QuizPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
+  const [isScreenRecording, setIsScreenRecording] = useState(false);
 
   const supabase = createClient();
 
   useEffect(() => {
-    const cleanup = initAssessmentProtection();
-    return cleanup;
+    const cleanupProtection = initAssessmentProtection();
+    const cleanupRecording = initRecordingDetection({
+      onDetected: () => {
+        setIsScreenRecording(true);
+        console.log("[v0] Screen recording detected - blurring content");
+      },
+      onStopped: () => {
+        setIsScreenRecording(false);
+        console.log("[v0] Screen recording stopped - removing blur");
+      },
+    });
+
+    return () => {
+      cleanupProtection();
+      cleanupRecording();
+    };
   }, []);
 
   useEffect(() => {
@@ -296,6 +312,11 @@ export default function QuizPage() {
 
   return (
     <div className="px-6 py-12 max-w-2xl mx-auto space-y-8">
+      {isScreenRecording && (
+        <div className="recording-warning">
+          Recording Detected - Content Blurred
+        </div>
+      )}
       {/* Back button */}
       <Button
         variant="outline"
@@ -328,7 +349,11 @@ export default function QuizPage() {
       </div>
 
       {/* Question Card */}
-      <Card className="assessment-protected">
+      <Card
+        className={`assessment-protected ${
+          isScreenRecording ? "assessment-recording-detected" : ""
+        }`}
+      >
         <CardHeader>
           <CardTitle className="text-lg">
             {currentQuestion.question_text}
