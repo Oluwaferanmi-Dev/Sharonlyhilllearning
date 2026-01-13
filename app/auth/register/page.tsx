@@ -25,6 +25,7 @@ import ProfilePictureUpload from "@/components/profile-picture-upload";
 import { uploadProfilePicture } from "@/lib/utils/file-upload";
 import Link from "next/link";
 import Image from "next/image";
+import { AlertCircle } from "lucide-react";
 
 const DEPARTMENTS = [
   "Clinical Services",
@@ -38,11 +39,31 @@ const DEPARTMENTS = [
   "Other",
 ];
 
+// NIN validation function
+const validateNIN = (nin: string): { isValid: boolean; message: string } => {
+  // Remove any whitespace
+  const cleanNIN = nin.trim();
+
+  // Check if NIN is exactly 11 digits
+  if (!/^\d{11}$/.test(cleanNIN)) {
+    return {
+      isValid: false,
+      message: "NIN must be exactly 11 digits",
+    };
+  }
+
+  return {
+    isValid: true,
+    message: "NIN is valid",
+  };
+};
+
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [nin, setNin] = useState("");
+  const [ninError, setNinError] = useState("");
   const [department, setDepartment] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -52,6 +73,42 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  //? Handle NIN validation
+  const validateNIN = (value: string) => {
+    // Remove any non-digit characters
+    const digitsOnly = value.replace(/\D/g, "");
+
+    if (digitsOnly.length === 0) {
+      setNinError("");
+      return true;
+    }
+
+    if (digitsOnly.length < 11) {
+      setNinError("NIN must be 11 digits");
+      return false;
+    }
+
+    if (digitsOnly.length > 11) {
+      setNinError("NIN cannot exceed 11 digits");
+      return false;
+    }
+
+    setNinError("");
+    return true;
+  };
+  //? Handle NIN input change with validation
+  const handleNinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Only allow digits
+    const digitsOnly = value.replace(/\D/g, "");
+    // Limit to 11 digits
+    const limitedValue = digitsOnly.slice(0, 11);
+
+    setNin(limitedValue);
+    validateNIN(limitedValue);
+  };
+
+  //? Handle Image Upload
   const handleFileSelect = (file: File) => {
     setProfileFile(file);
     const reader = new FileReader();
@@ -64,6 +121,12 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    //* Validate NIN before submission
+    if (!validateNIN(nin) || nin.length !== 11) {
+      setError("Please enter a valid 11-digit NIN");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -167,6 +230,7 @@ export default function RegisterPage() {
                   placeholder="John"
                   required
                   value={firstName}
+                  disabled={isLoading}
                   onChange={(e) => setFirstName(e.target.value)}
                   className="text-sm"
                 />
@@ -180,6 +244,7 @@ export default function RegisterPage() {
                   placeholder="Doe"
                   required
                   value={lastName}
+                  disabled={isLoading}
                   onChange={(e) => setLastName(e.target.value)}
                   className="text-sm"
                 />
@@ -196,6 +261,7 @@ export default function RegisterPage() {
                 placeholder="you@hospital.com"
                 required
                 value={email}
+                disabled={isLoading}
                 onChange={(e) => setEmail(e.target.value)}
                 className="text-sm"
               />
@@ -207,12 +273,27 @@ export default function RegisterPage() {
               </Label>
               <Input
                 id="nin"
-                placeholder="Enter your NIN"
+                placeholder="Enter your 11-digit NIN"
                 required
                 value={nin}
-                onChange={(e) => setNin(e.target.value)}
-                className="text-sm"
+                maxLength={11}
+                disabled={isLoading}
+                onChange={handleNinChange}
+                className={
+                  ninError ? "border-red-300 focus-visible:ring-red-400" : ""
+                }
               />
+              {ninError && (
+                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {ninError}
+                </p>
+              )}
+              {nin.length > 0 && !ninError && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {nin.length}/11 digits
+                </p>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -248,6 +329,7 @@ export default function RegisterPage() {
                 type="password"
                 required
                 value={password}
+                disabled={isLoading}
                 onChange={(e) => setPassword(e.target.value)}
                 className="text-sm"
               />
@@ -262,6 +344,7 @@ export default function RegisterPage() {
                 type="password"
                 required
                 value={confirmPassword}
+                disabled={isLoading}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="text-sm"
               />
