@@ -95,6 +95,7 @@ export default function ProfilePictureUpload({
           accept="image/*"
           className="hidden"
           disabled={isLoading}
+          required
         />
 
         {preview ? (
