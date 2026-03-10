@@ -82,15 +82,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Level not found" }, { status: 404 })
     }
 
+    // LEVEL ACCESS CHECK: Verify user has token-based access to this level
+    // Beginner (order_index = 1) is always accessible
     if (levelRow.order_index > 1) {
-      const { data: unlockData } = await adminClient
-        .from("level_unlocks")
-        .select("is_unlocked")
+      // Higher levels require token-based user_level_access
+      const { data: userAccess } = await adminClient
+        .from("user_level_access")
+        .select("id")
+        .eq("user_id", user.id)
         .eq("level_id", levelId)
-        .single()
+        .maybeSingle()
 
-      if (!unlockData?.is_unlocked) {
-        return NextResponse.json({ error: "This assessment level is locked" }, { status: 403 })
+      if (!userAccess) {
+        return NextResponse.json(
+          { error: "Unauthorized: You do not have access to this assessment level" },
+          { status: 403 }
+        )
       }
     }
 

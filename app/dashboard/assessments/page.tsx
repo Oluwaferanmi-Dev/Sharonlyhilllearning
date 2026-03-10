@@ -13,7 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Lock, AlertCircle } from "lucide-react";
+import { Lock, AlertCircle, Ticket } from "lucide-react";
+import { TokenRedemptionDialog } from "@/components/token-redemption-dialog";
 
 interface AssessmentLevel {
   id: string;
@@ -28,11 +29,6 @@ interface UserAssessment {
   topic_id: string;
   status: string;
   score: number | null;
-}
-
-interface LevelUnlock {
-  level_id: string;
-  is_unlocked: boolean;
 }
 
 const COMPLIANCE_DOMAINS = [
@@ -57,82 +53,90 @@ export default function AssessmentsPage() {
   const [user, setUser] = useState<any>(null);
   const [levels, setLevels] = useState<AssessmentLevel[]>([]);
   const [userAssessments, setUserAssessments] = useState<UserAssessment[]>([]);
-  const [levelUnlocks, setLevelUnlocks] = useState<Record<string, boolean>>({});
+  const [userAccess, setUserAccess] = useState<Record<string, boolean>>({});
   const [topicCounts, setTopicCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [showPreAssessment, setShowPreAssessment] = useState(false);
+  const [showTokenDialog, setShowTokenDialog] = useState(false);
 
   const supabase = createClient();
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
+  const loadData = async () => {
+    try {
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
 
-        if (!currentUser) {
-          redirect("/auth/login");
-        }
-
-        setUser(currentUser);
-
-        // Get all levels
-        const { data: levelsData } = await supabase
-          .from("assessment_levels")
-          .select("*")
-          .order("order_index");
-
-        setLevels(levelsData || []);
-
-        if (levelsData) {
-          const counts: Record<string, number> = {};
-          for (const level of levelsData) {
-            const { count } = await supabase
-              .from("assessment_topics")
-              .select("*", { count: "exact", head: true })
-              .eq("level_id", level.id);
-            counts[level.id] = count || 0;
-          }
-          setTopicCounts(counts);
-        }
-
-        const { data: unlocksData } = await supabase
-          .from("level_unlocks")
-          .select("level_id, is_unlocked");
-
-        const unlocksMap: Record<string, boolean> = {};
-        unlocksData?.forEach((u: LevelUnlock) => {
-          unlocksMap[u.level_id] = u.is_unlocked;
-        });
-        setLevelUnlocks(unlocksMap);
-
-        // Get user assessments
-        const { data: assessmentsData } = await supabase
-          .from("user_assessments")
-          .select("*")
-          .eq("user_id", currentUser.id)
-          .order("created_at", { ascending: false });
-
-        setUserAssessments(assessmentsData || []);
-
-        // Show pre-assessment on first visit
-        const hasSeenPreAssessment =
-          typeof window !== "undefined" &&
-          localStorage.getItem("seen_pre_assessment");
-        if (!hasSeenPreAssessment) {
-          setShowPreAssessment(true);
-          localStorage.setItem("seen_pre_assessment", "true");
-        }
-      } catch (err) {
-        console.error("[v0] Error loading assessments:", err);
-      } finally {
-        setLoading(false);
+      if (!currentUser) {
+        redirect("/auth/login");
       }
-    };
 
+      setUser(currentUser);
+
+      // Get all levels
+      const { data: levelsData } = await supabase
+        .from("assessment_levels")
+        .select("*")
+        .order("order_index");
+
+      setLevels(levelsData || []);
+
+      if (levelsData) {
+        const counts: Record<string, number> = {};
+        for (const level of levelsData) {
+          const { count } = await supabase
+            .from("assessment_topics")
+            .select("*", { count: "exact", head: true })
+            .eq("level_id", level.id);
+          counts[level.id] = count || 0;
+        }
+        setTopicCounts(counts);
+      }
+
+      // Get user level access (token-based)
+      const { data: accessData } = await supabase
+        .from("user_level_access")
+        .select("level_id")
+        .eq("user_id", currentUser.id);
+
+      const accessMap: Record<string, boolean> = {};
+      accessData?.forEach((a: any) => {
+        accessMap[a.level_id] = true;
+      });
+      setUserAccess(accessMap);
+
+      // Get user assessments
+      const { data: assessmentsData } = await supabase
+        .from("user_assessments")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .order("created_at", { ascending: false });
+
+      setUserAssessments(assessmentsData || []);
+
+      // Show pre-assessment on first visit
+      const hasSeenPreAssessment =
+        typeof window !== "undefined" &&
+        localStorage.getItem("seen_pre_assessment");
+      if (!hasSeenPreAssessment) {
+        setShowPreAssessment(true);
+        localStorage.setItem("seen_pre_assessment", "true");
+      }
+    } catch (err) {
+      console.error("[v0] Error loading assessments:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
+
+  const handleTokenRedeemed = () => {
+    // Reload user access after token redemption
+    loadData();
+  };
 
   if (loading) {
     return (
@@ -287,14 +291,26 @@ export default function AssessmentsPage() {
         </motion.div>
       )}
 
-      <div className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
-          Assessment Levels
-        </h1>
-        <p className="text-sm sm:text-base text-slate-600">
-          Complete assessments to demonstrate your healthcare compliance
-          knowledge and advance your career
-        </p>
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
+            Assessment Levels
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600">
+            Complete assessments to demonstrate your healthcare compliance
+            knowledge and advance your career
+          </p>
+        </div>
+        <Button
+          onClick={() => setShowTokenDialog(true)}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <Ticket className="w-4 h-4" />
+          <span className="hidden sm:inline">Redeem Token</span>
+          <span className="sm:hidden">Token</span>
+        </Button>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
@@ -304,7 +320,7 @@ export default function AssessmentsPage() {
           const completedCount = assessments.filter(
             (a) => a.status === "completed"
           ).length;
-          const isLocked = !levelUnlocks[level.id];
+          const hasAccess = level.order_index === 1 || userAccess[level.id];
           const totalTopics = topicCounts[level.id] || 0;
 
           return (
@@ -316,10 +332,10 @@ export default function AssessmentsPage() {
             >
               <Card
                 className={
-                  isLocked ? "opacity-75 border-slate-200 bg-slate-50" : ""
+                  !hasAccess ? "opacity-75 border-slate-200 bg-slate-50" : ""
                 }
               >
-                {isLocked && (
+                {!hasAccess && (
                   <div className="absolute top-4 right-4">
                     <motion.div
                       animate={{ scale: [1, 1.1, 1] }}
@@ -342,18 +358,17 @@ export default function AssessmentsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {isLocked ? (
+                  {!hasAccess ? (
                     <div className="text-center py-6 sm:py-8">
                       <p className="text-xs sm:text-sm text-slate-600 mb-4">
-                        Admin payment required to unlock this assessment level.
+                        Redeem a token to unlock this assessment level.
                       </p>
                       <Button
-                        variant="outline"
-                        disabled
-                        className="text-xs sm:text-sm"
+                        onClick={() => setShowTokenDialog(true)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm"
                       >
-                        <Lock className="w-4 h-4 mr-2" />
-                        Locked
+                        <Ticket className="w-4 h-4 mr-2" />
+                        Redeem Token
                       </Button>
                     </div>
                   ) : (
@@ -382,6 +397,12 @@ export default function AssessmentsPage() {
           );
         })}
       </div>
+
+      <TokenRedemptionDialog
+        isOpen={showTokenDialog}
+        onClose={() => setShowTokenDialog(false)}
+        onSuccess={handleTokenRedeemed}
+      />
     </div>
   );
 }

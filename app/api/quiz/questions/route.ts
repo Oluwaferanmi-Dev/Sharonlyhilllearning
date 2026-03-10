@@ -27,22 +27,33 @@ export async function GET(request: NextRequest) {
 
   const adminClient = createAdminClient()
 
-  // SINGLE-ATTEMPT CHECK: Prevent starting if already completed
-  const { data: existingAttempt } = await supabase
-    .from("user_assessments")
-    .select("id, status")
-    .eq("user_id", user.id)
-    .eq("topic_id", topicId)
-    .maybeSingle()
+  // LEVEL ACCESS CHECK: Verify user has token-based access to this level
+  // Beginner (order_index = 1) is always accessible
+  const { data: levelRow } = await adminClient
+    .from("assessment_levels")
+    .select("order_index")
+    .eq("id", levelId)
+    .single()
 
-  if (existingAttempt?.status === "completed") {
-    return NextResponse.json(
-      {
-        error: "ALREADY_COMPLETED",
-        message: "You have already completed this assessment. Retakes are not allowed for this topic.",
-      },
-      { status: 403 }
-    )
+  if (!levelRow) {
+    return NextResponse.json({ error: "Level not found" }, { status: 404 })
+  }
+
+  if (levelRow.order_index > 1) {
+    // Higher levels require token-based user_level_access
+    const { data: userAccess } = await adminClient
+      .from("user_level_access")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("level_id", levelId)
+      .maybeSingle()
+
+    if (!userAccess) {
+      return NextResponse.json(
+        { error: "Unauthorized: You do not have access to this assessment level" },
+        { status: 403 }
+      )
+    }
   }
 
   // Verify level is unlocked before serving questions.

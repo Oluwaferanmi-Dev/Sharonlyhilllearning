@@ -16,8 +16,8 @@ export default async function QuizPage({
     redirect("/auth/login")
   }
 
-  // SERVER-SIDE level lock check — cannot be bypassed by URL typing.
-  // Beginner (order_index = 1) is always accessible; higher levels require unlock.
+  // SERVER-SIDE level access check — cannot be bypassed by URL typing.
+  // Beginner (order_index = 1) is always accessible; higher levels require token-based access.
   const { data: levelData } = await supabase
     .from("assessment_levels")
     .select("order_index")
@@ -29,13 +29,14 @@ export default async function QuizPage({
   }
 
   if (levelData.order_index > 1) {
-    const { data: unlockData } = await supabase
-      .from("level_unlocks")
-      .select("is_unlocked")
+    const { data: userAccess } = await supabase
+      .from("user_level_access")
+      .select("id")
+      .eq("user_id", user.id)
       .eq("level_id", levelId)
-      .single()
+      .maybeSingle()
 
-    if (!unlockData?.is_unlocked) {
+    if (!userAccess) {
       redirect("/dashboard/assessments")
     }
   }
