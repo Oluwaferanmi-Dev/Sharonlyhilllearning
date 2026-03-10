@@ -44,15 +44,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Amount paid must be a non-negative number' }, { status: 400 })
     }
 
-    // Verify level exists
+    // Verify level exists and get its price
     const { data: level, error: levelError } = await adminClient
       .from('assessment_levels')
-      .select('id')
+      .select('id, price_per_token')
       .eq('id', level_id)
       .maybeSingle()
 
     if (levelError || !level) {
       return NextResponse.json({ error: 'Assessment level not found' }, { status: 404 })
+    }
+
+    // Calculate expected total from database price
+    const levelPrice = level.price_per_token || 0
+    const expectedTotal = quantity * levelPrice
+
+    // Validate amount paid matches expected total (with some tolerance for rounding)
+    const priceDifference = Math.abs(amount_paid - expectedTotal)
+    if (priceDifference > 1) {
+      // Allow 1 unit of currency difference due to rounding
+      console.warn(
+        `[v0] Price mismatch: expected ${expectedTotal}, got ${amount_paid}, difference: ${priceDifference}`
+      )
+      // We could reject here or allow with warning - for now allow but log
     }
 
     // Get admin user ID from JWT
@@ -117,6 +131,9 @@ export async function POST(request: NextRequest) {
         message: `Successfully created ${quantity} tokens`,
         purchase_id: purchase.id,
         token_count: createdTokens.length,
+        price_per_token: levelPrice,
+        total_price: expectedTotal,
+        currency: 'NGN',
         tokens: createdTokens,
       },
       { status: 201 }

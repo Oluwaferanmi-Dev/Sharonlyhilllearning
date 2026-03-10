@@ -14,6 +14,8 @@ interface Level {
   name: string
   order_index: number
   description?: string
+  price_per_token?: number
+  price_currency?: string
 }
 
 interface Topic {
@@ -29,6 +31,9 @@ export default function AssessmentsPage() {
   const [topics, setTopics] = useState<Map<string, Topic[]>>(new Map())
   const [expandedLevels, setExpandedLevels] = useState<Set<string>>(new Set(["1"])) // Expand first level by default
   const [isLoading, setIsLoading] = useState(true)
+  const [editingLevelId, setEditingLevelId] = useState<string | null>(null)
+  const [editingPrice, setEditingPrice] = useState<number | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -85,6 +90,55 @@ export default function AssessmentsPage() {
     setExpandedLevels(newExpanded)
   }
 
+  const handleUpdatePrice = async (levelId: string, newPrice: number) => {
+    if (newPrice < 0) {
+      toast({
+        title: "Invalid Price",
+        description: "Price must be non-negative",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const response = await fetch(`/api/admin/levels/${levelId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ price_per_token: newPrice }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Failed to update price")
+      }
+
+      const { level } = await response.json()
+
+      // Update local state
+      setLevels((prevLevels) =>
+        prevLevels.map((l) => (l.id === levelId ? { ...l, price_per_token: level.price_per_token } : l))
+      )
+
+      setEditingLevelId(null)
+      setEditingPrice(null)
+
+      toast({
+        title: "Price Updated",
+        description: `Price for ${level.name} updated to ${level.price_per_token}`,
+      })
+    } catch (err: any) {
+      console.error("[v0] Price update error:", err)
+      toast({
+        title: "Error",
+        description: err.message || "Failed to update price",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="px-6 py-12 text-center">
@@ -129,8 +183,17 @@ export default function AssessmentsPage() {
                       />
                       <div>
                         <CardTitle className="text-lg">{level.name} Level</CardTitle>
-                        <CardDescription>
-                          {levelTopics.length} {levelTopics.length === 1 ? "topic" : "topics"}
+                        <CardDescription className="flex items-center gap-2">
+                          <span>{levelTopics.length} {levelTopics.length === 1 ? "topic" : "topics"}</span>
+                          {editingLevelId === level.id ? (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                              Editing price...
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-600">
+                              Price: {level.price_per_token || 0} {level.price_currency || "NGN"}
+                            </span>
+                          )}
                         </CardDescription>
                       </div>
                     </div>
@@ -139,7 +202,69 @@ export default function AssessmentsPage() {
 
                 {isExpanded && (
                   <CardContent className="pt-0">
-                    <div className="space-y-3 border-t border-slate-200 pt-4">
+                    {/* Price Management Section */}
+                    <div className="mb-6 pb-6 border-b border-slate-200">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-slate-900 text-sm">Token Price</p>
+                            <p className="text-xs text-slate-600">Price per token in NGN</p>
+                          </div>
+                          {editingLevelId === level.id ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={editingPrice ?? ""}
+                                onChange={(e) => setEditingPrice(parseFloat(e.target.value) || 0)}
+                                className="w-20 px-2 py-1 border border-slate-300 rounded text-sm"
+                                placeholder="0"
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingLevelId(null)
+                                  setEditingPrice(null)
+                                }}
+                                disabled={isSaving}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="bg-blue-600 hover:bg-blue-700"
+                                onClick={() => handleUpdatePrice(level.id, editingPrice ?? 0)}
+                                disabled={isSaving || editingPrice === null}
+                              >
+                                {isSaving ? "Saving..." : "Save"}
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg font-bold text-slate-900">
+                                {level.price_per_token || 0} {level.price_currency || "NGN"}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingLevelId(level.id)
+                                  setEditingPrice(level.price_per_token || 0)
+                                }}
+                              >
+                                Edit
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Topics Section */}
+                    <div className="space-y-3">
+                      <p className="font-semibold text-slate-900 text-sm mb-3">Topics</p>
                       {levelTopics.length === 0 ? (
                         <p className="text-slate-500 text-sm py-4">No topics yet for this level</p>
                       ) : (
