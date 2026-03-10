@@ -1,28 +1,20 @@
-import { createClient, createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
+import { requireAdmin } from "@/lib/auth/require-admin"
 
 /**
- * Get detailed assessment information for a specific staff member
+ * Get detailed assessment information for a specific staff member.
+ * Admin-only endpoint.
  *
  * GET /api/admin/staff/[staffId]
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ staffId: string }> }) {
   try {
+    const { error: adminError } = await requireAdmin()
+    if (adminError) return adminError
+
     const { staffId } = await params
-    console.log("[v0] Fetching staff details for:", staffId)
-
     const supabase = createAdminClient()
-    const authSupabase = await createClient()
-
-    // Get current user (admin) for authorization check
-    const {
-      data: { user },
-      error: userError,
-    } = await authSupabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
 
     // Get staff profile using admin client
     const { data: staffProfile, error: profileError } = await supabase
@@ -94,8 +86,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         levelName: data.levelName,
         topics: data.topics,
       }))
-
-    console.log("[v0] Staff details fetched successfully")
 
     return NextResponse.json(
       {

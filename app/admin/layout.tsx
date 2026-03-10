@@ -1,44 +1,40 @@
-import type React from "react";
+import type React from "react"
 
-import { createAdminClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { AdminNav } from "@/components/admin-nav";
+import { createClient, createAdminClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
+import { AdminNav } from "@/components/admin-nav"
 
 export default async function AdminLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
-  const supabase = createAdminClient();
-  const {
-    data: { users },
-  } = await supabase.auth.admin.listUsers();
+  // Use the cookie-based SSR client to get the authenticated session user
+  const supabase = await createClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
 
-  // Since we can't get user from createAdminClient, we need to verify differently
-  // Get the user from regular client for auth check
-  const { createClient } = await import("@/lib/supabase/server");
-  const userClient = await createClient();
-  const { data } = await userClient.auth.getUser();
-
-  if (!data?.user) {
-    redirect("/auth/login");
+  if (error || !user) {
+    redirect("/auth/login")
   }
 
-  const { data: profile } = await supabase
+  // Secondary server-side role check against the database.
+  // The middleware handles the first layer via app_metadata; this is a
+  // belt-and-suspenders check at the layout level using the service role.
+  const adminClient = createAdminClient()
+  const { data: profile } = await adminClient
     .from("profiles")
     .select("role")
-    .eq("id", data.user.id)
-    .single();
+    .eq("id", user.id)
+    .single()
 
-  // If user is not an admin, redirect to dashboard
   if (profile?.role !== "admin") {
-    redirect("/dashboard");
+    redirect("/dashboard")
   }
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <AdminNav user={data.user} />
+      <AdminNav user={user} />
       <div className="max-w-7xl mx-auto p-4">{children}</div>
     </div>
-  );
+  )
 }

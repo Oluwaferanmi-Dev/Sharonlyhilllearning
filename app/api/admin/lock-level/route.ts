@@ -1,63 +1,40 @@
-import { createClient } from "@/lib/supabase/server";
-import { type NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/server"
+import { type NextRequest, NextResponse } from "next/server"
+import { requireAdmin } from "@/lib/auth/require-admin"
 
 /**
- * Lock an assessment level (reset to locked state)
- * Only admins can perform this action
+ * Lock an assessment level (reset to locked state).
+ * Only admins can perform this action.
  *
  * POST /api/admin/lock-level
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { levelId } = body;
+    const { error: adminError } = await requireAdmin()
+    if (adminError) return adminError
 
-    console.log("[v0] Lock request:", { levelId });
+    const body = await request.json()
+    const { levelId } = body
 
-    const supabase = await createClient();
-
-    // Get current user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!levelId) {
+      return NextResponse.json({ error: "Missing levelId" }, { status: 400 })
     }
 
-    // Lock the level by setting is_unlocked to false
-    const { error: lockError } = await supabase.from("level_unlocks").upsert(
-      {
-        level_id: levelId,
-        is_unlocked: false,
-        unlocked_at: null,
-      },
-      { onConflict: "level_id" }
-    );
+    const adminClient = createAdminClient()
+
+    const { error: lockError } = await adminClient
+      .from("level_unlocks")
+      .upsert(
+        { level_id: levelId, is_unlocked: false, unlocked_at: null },
+        { onConflict: "level_id" }
+      )
 
     if (lockError) {
-      console.error("[v0] Error locking level:", lockError);
-      return NextResponse.json(
-        { error: "Failed to lock level" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to lock level" }, { status: 500 })
     }
 
-    console.log("[v0] Level locked successfully");
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Level reset to locked state",
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, message: "Level reset to locked state" }, { status: 200 })
   } catch (error: any) {
-    console.error("[v0] Lock level error:", error);
-    return NextResponse.json(
-      { error: error.message || "Failed to lock level" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message || "Failed to lock level" }, { status: 500 })
   }
 }
