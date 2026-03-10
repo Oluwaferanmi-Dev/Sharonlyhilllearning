@@ -1,4 +1,4 @@
--- Insert all beginner level topics with complete Q&A from EDOHERMA standards
+-- Insert all beginner level topics with complete Q&A from Cherith Training standards
 
 -- Fixed CTE scope - use proper subquery to get beginner_level id
 INSERT INTO public.assessment_topics (level_id, name, description)
@@ -35,7 +35,7 @@ SELECT cts_topic.id, question, opt_a, opt_b, opt_c, opt_d, correct FROM (
     ('When a patient first arrives at a facility, what is the most appropriate first step in care, treatment, and services?', 'Give medication immediately', 'Discharge the patient quickly', 'Conduct an initial assessment of the patient''s needs', 'Ask the patient to return another day', 'C'),
     ('Which best describes an individualised plan of care?', 'One generic plan used for all patients', 'A plan based on each patient''s assessment, needs, and preferences', 'A plan focused only on medication prescriptions', 'A plan written only for legal protection', 'B'),
     ('A patient has been treated and is ready to go home. Which action best reflects good CTS practice?', 'Discharge without any instructions', 'Provide clear discharge instructions and follow-up plans', 'Only tell the patient to come back if they feel worse', 'Ask the patient to write their own discharge summary', 'B'),
-    ('A child is brought with signs of physical abuse. What should staff do in line with CTS and EDOHERMA expectations?', 'Ignore the signs to avoid trouble', 'Provide care and follow protocols for reporting and protecting the child', 'Send the child home without action', 'Only inform the media', 'B'),
+            ('A child is brought with signs of physical abuse. What should staff do in line with CTS and Cherith Training expectations?', 'Ignore the signs to avoid trouble', 'Provide care and follow protocols for reporting and protecting the child', 'Send the child home without action', 'Only inform the media', 'B'),
     ('In the EDOHERMA framework, what is the main goal of Care, Treatment, and Services?', 'To maximise hospital revenue', 'To ensure each person receives safe, appropriate, and coordinated care based on their needs', 'To keep patients in hospital as long as possible', 'To reduce the number of staff', 'B')
 ) AS t(question, opt_a, opt_b, opt_c, opt_d, correct)
 CROSS JOIN cts_topic;

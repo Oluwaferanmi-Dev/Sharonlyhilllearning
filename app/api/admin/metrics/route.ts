@@ -1,5 +1,6 @@
-import { createClient, createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
+import { requireAdmin } from "@/lib/auth/require-admin"
 
 /**
  * Get admin dashboard metrics
@@ -9,32 +10,15 @@ import { type NextRequest, NextResponse } from "next/server"
  */
 export async function GET(request: NextRequest) {
   try {
-    console.log("[v0] Fetching admin metrics")
-
-    const supabase = await createClient()
-
-    // Get current user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const { user, error: adminError } = await requireAdmin()
+    if (adminError) return adminError
 
     const adminClient = createAdminClient()
-
-    console.log("[v0] Admin client created, querying profiles with role='staff'")
 
     const { data: staffProfiles, error: staffError } = await adminClient
       .from("profiles")
       .select("id, first_name, last_name, email, department, created_at")
       .eq("role", "staff")
-
-    console.log("[v0] Staff query error:", staffError)
-    console.log("[v0] Staff profiles result:", staffProfiles)
-    console.log("[v0] Staff count from query:", staffProfiles?.length || 0)
 
     if (staffError) {
       console.error("[v0] Staff query error details:", staffError)
@@ -44,9 +28,6 @@ export async function GET(request: NextRequest) {
 
     const staffUserIds = staffProfiles?.map((p) => p.id) || []
     const totalStaff = staffProfiles?.length || 0
-
-    console.log("[v0] Total staff:", totalStaff)
-    console.log("[v0] Staff user IDs:", staffUserIds)
 
     // Get assessment metrics
     let topicsStarted = 0
@@ -87,15 +68,6 @@ export async function GET(request: NextRequest) {
         department: staff.department,
         created_at: staff.created_at,
       }))
-
-    console.log("[v0] Metrics complete:", {
-      totalStaff,
-      topicsStarted,
-      topicsCompleted,
-      topicsPassed,
-      averageScore,
-      recentStaffCount: recentStaff.length,
-    })
 
     return NextResponse.json(
       {

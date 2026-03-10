@@ -1,19 +1,34 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 const BUCKET_NAME = "staff-profiles";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"];
 
 export async function POST(request: NextRequest) {
+  // 10 uploads per IP per hour
+  const { allowed } = rateLimit(request, { max: 10, windowMs: 60 * 60 * 1000 }, "upload-profile")
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many upload attempts. Please try again later." }, { status: 429 })
+  }
+
   try {
+    // Verify authenticated session — prevent uploading on behalf of another user
+    const authClient = await createClient()
+    const { data: { user }, error: authError } = await authClient.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    const userId = formData.get("userId") as string;
+    // Always use the authenticated user's own ID — ignore client-supplied userId
+    const userId = user.id
 
-    if (!file || !userId) {
+    if (!file) {
       return NextResponse.json(
-        { error: "Missing file or userId" },
+        { error: "Missing file" },
         { status: 400 }
       );
     }
@@ -39,11 +54,9 @@ export async function POST(request: NextRequest) {
     const fileName = `profile_${timestamp}.${extension}`;
     const filePath = `${userId}/${fileName}`;
 
-    console.log("[v0] API: Uploading file:", filePath);
-
     const buffer = await file.arrayBuffer();
 
-    const { data, error } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(filePath, buffer, {
         contentType: file.type,
@@ -51,32 +64,26 @@ export async function POST(request: NextRequest) {
         upsert: false,
       });
 
-    if (error) {
-      console.error("[v0] API: Upload error:", error);
+    if (uploadError) {
       return NextResponse.json(
         { error: "Failed to upload file" },
         { status: 500 }
       );
     }
 
-    // Generate public URL
     const { data: publicData } = supabase.storage
       .from(BUCKET_NAME)
       .getPublicUrl(filePath);
     const publicUrl = publicData?.publicUrl;
 
     if (!publicUrl) {
-      console.error("[v0] API: Failed to generate public URL");
       return NextResponse.json(
         { error: "Failed to generate public URL" },
         { status: 500 }
       );
     }
 
-    console.log("[v0] API: File uploaded successfully:", publicUrl);
-
-    // Update database with the new profile picture path and URL
-    const { data: dbData, error: dbError } = await supabase
+    const { error: dbError } = await supabase
       .from("profiles")
       .update({
         profile_picture_path: filePath,
@@ -86,21 +93,17 @@ export async function POST(request: NextRequest) {
       .eq("id", userId);
 
     if (dbError) {
-      console.error("[v0] API: Database update error:", dbError);
       return NextResponse.json(
         { error: "Failed to update database" },
         { status: 500 }
       );
     }
 
-    console.log("[v0] API: Database updated successfully:", dbData);
-
     return NextResponse.json(
       { url: publicUrl, path: filePath },
       { status: 200 }
     );
   } catch (error) {
-    console.error("[v0] API: Upload exception:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Upload failed" },
       { status: 500 }

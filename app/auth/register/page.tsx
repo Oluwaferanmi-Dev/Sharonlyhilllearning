@@ -203,14 +203,14 @@ export default function RegisterPage() {
             <div className="w-16 h-16 relative">
               <Image
                 src="/cherith-logo.png"
-                alt="Cherith Training Academy"
+                alt="Cherith Academy"
                 width={64}
                 height={64}
                 className="object-contain"
               />
             </div>
             <span className="font-semibold text-slate-900">
-              Cherith Training Academy
+              Cherith Academy
             </span>
           </div>
           <CardTitle className="text-2xl">Create Account</CardTitle>

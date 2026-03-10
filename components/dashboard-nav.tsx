@@ -43,14 +43,14 @@ export function DashboardNav({ user }: { user: User }) {
             <div className="w-12 h-12 sm:w-16 sm:h-16 relative">
               <Image
                 src="/cherith-logo.png"
-                alt="Cherith Training Academy"
+                alt="Cherith Academy"
                 width={64}
                 height={64}
                 className="object-contain"
               />
             </div>
             <span className="hidden sm:inline font-semibold text-slate-900 text-sm sm:text-base">
-              EdoHerma
+              Cherith Training
             </span>
           </Link>
 

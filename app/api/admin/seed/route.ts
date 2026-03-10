@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Default admin credentials
-    const adminEmail = "admin@edoherma.com"
+    const adminEmail = "admin@cherithtraining.com"
     const adminPassword = "Admin@2025" // User should change this immediately
     const firstName = "Admin"
     const lastName = "User"
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     const { data: org, error: orgError } = await supabase
       .from("organizations")
       .insert({
-        name: "EdoHerma Organization",
+        name: "Cherith Training Organization",
         admin_user_id: authData.user.id,
       })
       .select()

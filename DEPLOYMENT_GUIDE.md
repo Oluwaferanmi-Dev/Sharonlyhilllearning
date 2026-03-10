@@ -1,6 +1,6 @@
 # Healthcare Regulation Platform - Deployment Guide
 
-Complete guide to deploy the EDOHERMA Healthcare Regulation Platform to your own Vercel and Supabase accounts.
+Complete guide to deploy the Cherith Training Healthcare Regulation Platform to your own Vercel and Supabase accounts.
 
 ---
 
@@ -23,7 +23,7 @@ Before you begin, ensure you have:
 1. Log in to [Supabase Dashboard](https://supabase.com/dashboard)
 2. Click **"New Project"**
 3. Fill in project details:
-   - **Name**: `edoherma-healthcare` (or your preferred name)
+   - **Name**: `cherith-training-healthcare` (or your preferred name)
    - **Database Password**: Create a strong password (save this!)
    - **Region**: Choose closest to your users
    - **Pricing Plan**: Free tier is sufficient to start
@@ -91,7 +91,7 @@ You need to run SQL scripts in the **exact order below** to create all tables an
 
 **7. Insert All 14 Beginner Topics (007_insert_all_14_beginner_topics.sql)**
 ```sql
--- Inserts all 14 EDOHERMA topics with 5 questions each (70 total questions)
+-- Inserts all 14 Cherith Training topics with 5 questions each (70 total questions)
 -- Topics: APR, CTS, EC, EM, HRM, IC, IM, LD, LS, MM, NPSG, PI, RC, RI, WT
 ```
 
@@ -324,7 +324,7 @@ You have two options to create the first admin account:
 
 1. Visit: `https://your-domain.vercel.app/setup/admin`
 2. Enter admin details:
-   - **Email**: admin@edoherma.com (or your preferred email)
+    - **Email**: admin@cherithtraining.com (or your preferred email)
    - **Password**: Choose a strong password
    - **First Name**: Your first name
    - **Last Name**: Your last name
@@ -340,14 +340,14 @@ If the admin setup page doesn't work, create admin directly in database:
 
 ```sql
 -- First, create the auth user in Supabase Dashboard → Authentication → Users
--- Click "Add user" → Email: admin@edoherma.com, Password: (your-password)
+-- Click "Add user" → Email: admin@cherithtraining.com, Password: (your-password)
 -- Copy the user ID from the user list
 
 -- Then run this SQL (replace USER_ID with the actual ID):
 INSERT INTO profiles (id, email, first_name, last_name, role)
 VALUES (
   'USER_ID',  -- Replace with actual user ID from auth.users
-  'admin@edoherma.com',
+  'admin@cherithtraining.com',
   'Admin',
   'User',
   'admin'
@@ -379,7 +379,7 @@ VALUES (
 1. Log out of admin account
 2. Click **"Register"** on the login page
 3. Create a staff account:
-   - Email: `test-staff@edoherma.com`
+   - Email: `test-staff@cherithtraining.com`
    - Password: Choose a password
    - First Name: Test
    - Last Name: Staff
@@ -566,7 +566,7 @@ This should be fixed in the codebase. Verify these files use `createAdminClient(
 ### Configure Custom Domain (Optional)
 
 1. In Vercel Dashboard, go to **Settings** → **Domains**
-2. Add your custom domain (e.g., `healthcare.edoherma.com`)
+2. Add your custom domain (e.g., `healthcare.cherithtraining.com`)
 3. Follow Vercel's DNS configuration instructions
 4. Update Supabase redirect URLs with your custom domain
 
@@ -670,4 +670,4 @@ For any issues or questions, refer to the troubleshooting section above.
 3. Monitor staff progress from the admin dashboard
 4. Customize assessment content as needed
 
-Good luck with your EDOHERMA healthcare regulation training! 🏥
+Good luck with your Cherith Training healthcare regulation training platform!

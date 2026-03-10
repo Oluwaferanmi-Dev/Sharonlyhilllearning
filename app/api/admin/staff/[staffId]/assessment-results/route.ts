@@ -1,12 +1,18 @@
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
+import { requireAdmin } from "@/lib/auth/require-admin"
 
 /**
- * Get detailed assessment results with individual questions and answers
+ * Get detailed assessment results with individual questions and answers.
+ * Admin-only endpoint.
+ *
  * GET /api/admin/staff/[staffId]/assessment-results?assessmentId=[id]
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ staffId: string }> }) {
   try {
+    const { error: adminError } = await requireAdmin()
+    if (adminError) return adminError
+
     const { staffId } = await params
     const searchParams = request.nextUrl.searchParams
     const assessmentId = searchParams.get("assessmentId")
@@ -15,7 +21,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "Assessment ID required" }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // Get the assessment with topic details
     const { data: assessment, error: assessmentError } = await supabase

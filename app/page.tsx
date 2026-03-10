@@ -42,14 +42,14 @@ export default function LandingPage() {
                 <div className="w-12 h-12 sm:w-24 sm:h-24 relative">
                   <Image
                     src="/cherith-logo.png"
-                    alt="Cherith Training Academy"
+                    alt="Cherith Academy"
                     width={96}
                     height={96}
                     className="object-contain"
                   />
                 </div>
                 <span className="text-sm sm:text-lg font-semibold text-slate-900 text-center sm:text-left">
-                  Cherith Training Academy
+                  Cherith Academy
                 </span>
               </div>
 
@@ -219,7 +219,7 @@ export default function LandingPage() {
             className="text-center mb-12 sm:mb-16"
           >
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
-              Why Choose Cherith Training Academy
+              Why Choose Cherith Academy
             </h2>
             <p className="text-base sm:text-xl text-slate-300 max-w-2xl mx-auto">
               Our assessments are designed by healthcare compliance experts to
@@ -299,7 +299,7 @@ export default function LandingPage() {
           </h2>
           <p className="text-base sm:text-xl text-blue-100 max-w-2xl mx-auto">
             Join hundreds of healthcare organizations that trust Cherith
-            Training Academy for their regulatory readiness programs.
+            Academy for their regulatory readiness programs.
           </p>
           <Link href="/auth/register">
             <Button
@@ -321,14 +321,14 @@ export default function LandingPage() {
                 <div className="w-12 h-12 sm:w-16 sm:h-16 relative">
                   <Image
                     src="/cherith-logo.png"
-                    alt="Cherith Training Academy"
+                    alt="Cherith Academy"
                     width={64}
                     height={64}
                     className="object-contain"
                   />
                 </div>
                 <span className="font-semibold text-sm sm:text-base text-center sm:text-left">
-                  Cherith Training Academy
+                  Cherith Academy
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-center sm:text-left">
@@ -398,7 +398,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-slate-700 pt-6 sm:pt-8 text-xs sm:text-sm text-center">
-            <p>&copy; 2025 Cherith Training Academy. All rights reserved.</p>
+            <p>&copy; 2025 Cherith Academy. All rights reserved.</p>
           </div>
         </div>
       </footer>

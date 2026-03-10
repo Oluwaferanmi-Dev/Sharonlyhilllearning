@@ -9,7 +9,7 @@ export async function GET() {
   try {
     const supabase = await createAdminClient()
 
-    const email = "admin@edoherma.com"
+    const email = "admin@cherithtraining.com"
     const password = "AdminPassword123!"
 
     console.log("[v0] Emergency seed starting for:", email)
@@ -40,7 +40,7 @@ export async function GET() {
     const { data: org, error: orgError } = await supabase
       .from("organizations")
       .insert({
-        name: "EdoHerma Organization",
+        name: "Cherith Training Organization",
         admin_user_id: authData.user.id,
       })
       .select()

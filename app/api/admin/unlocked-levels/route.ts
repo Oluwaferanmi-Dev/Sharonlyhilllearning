@@ -1,26 +1,21 @@
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
+import { requireAdmin } from "@/lib/auth/require-admin"
 
 /**
- * Get all assessment levels with their unlock status
+ * Get all assessment levels with their unlock status.
+ * Admin-only endpoint.
  *
  * GET /api/admin/unlocked-levels
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const { error: adminError } = await requireAdmin()
+    if (adminError) return adminError
 
-    // Get current user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
+    const adminClient = createAdminClient()
 
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const { data: unlockedLevels, error: levelsError } = await supabase
+    const { data: unlockedLevels, error: levelsError } = await adminClient
       .from("level_unlocks")
       .select("level_id, is_unlocked")
       .order("level_id", { ascending: true })
