@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   const adminClient = createAdminClient()
 
   // LEVEL ACCESS CHECK: Verify user has token-based access to this level
-  // Beginner (order_index = 1) is always accessible
+  // All levels require user_level_access
   const { data: levelRow } = await adminClient
     .from("assessment_levels")
     .select("order_index")
@@ -39,45 +39,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Level not found" }, { status: 404 })
   }
 
-  if (levelRow.order_index > 1) {
-    // Higher levels require token-based user_level_access
-    const { data: userAccess } = await adminClient
-      .from("user_level_access")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("level_id", levelId)
-      .maybeSingle()
+  const { data: userAccess } = await adminClient
+    .from("user_level_access")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("level_id", levelId)
+    .maybeSingle()
 
-    if (!userAccess) {
-      return NextResponse.json(
-        { error: "Unauthorized: You do not have access to this assessment level" },
-        { status: 403 }
-      )
-    }
-  }
-
-  // Verify level is unlocked before serving questions.
-  // Beginner (order_index = 1) is always accessible; higher levels require an unlock row.
-  const { data: levelRow } = await adminClient
-    .from("assessment_levels")
-    .select("order_index")
-    .eq("id", levelId)
-    .single()
-
-  if (!levelRow) {
-    return NextResponse.json({ error: "Level not found" }, { status: 404 })
-  }
-
-  if (levelRow.order_index > 1) {
-    const { data: unlockData } = await adminClient
-      .from("level_unlocks")
-      .select("is_unlocked")
-      .eq("level_id", levelId)
-      .single()
-
-    if (!unlockData?.is_unlocked) {
-      return NextResponse.json({ error: "This assessment level is locked" }, { status: 403 })
-    }
+  if (!userAccess) {
+    return NextResponse.json(
+      { error: "Unauthorized: You do not have access to this assessment level" },
+      { status: 403 }
+    )
   }
 
   // Verify topic belongs to this level

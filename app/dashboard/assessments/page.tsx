@@ -320,7 +320,7 @@ export default function AssessmentsPage() {
           const completedCount = assessments.filter(
             (a) => a.status === "completed"
           ).length;
-          const hasAccess = level.order_index === 1 || userAccess[level.id];
+          const hasAccess = userAccess[level.id];
           const totalTopics = topicCounts[level.id] || 0;
 
           return (

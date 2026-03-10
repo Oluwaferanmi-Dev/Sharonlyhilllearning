@@ -56,19 +56,16 @@ export default async function AssessmentLevelPage({
   }
 
   // SERVER-SIDE level access check — cannot be bypassed by URL typing.
-  // Beginner (order_index = 1) is always accessible.
-  // All other levels require a user_level_access record (token redemption).
-  if (level.order_index > 1) {
-    const { data: userAccess } = await supabase
-      .from("user_level_access")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("level_id", levelId)
-      .maybeSingle()
+  // All levels require a user_level_access record (token redemption).
+  const { data: userAccess } = await supabase
+    .from("user_level_access")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("level_id", levelId)
+    .maybeSingle()
 
-    if (!userAccess) {
-      redirect("/dashboard/assessments")
-    }
+  if (!userAccess) {
+    redirect("/dashboard/assessments")
   }
 
   // Fetch topics for this level

@@ -83,22 +83,19 @@ export async function POST(request: NextRequest) {
     }
 
     // LEVEL ACCESS CHECK: Verify user has token-based access to this level
-    // Beginner (order_index = 1) is always accessible
-    if (levelRow.order_index > 1) {
-      // Higher levels require token-based user_level_access
-      const { data: userAccess } = await adminClient
-        .from("user_level_access")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("level_id", levelId)
-        .maybeSingle()
+    // All levels require user_level_access
+    const { data: userAccess } = await adminClient
+      .from("user_level_access")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("level_id", levelId)
+      .maybeSingle()
 
-      if (!userAccess) {
-        return NextResponse.json(
-          { error: "Unauthorized: You do not have access to this assessment level" },
-          { status: 403 }
-        )
-      }
+    if (!userAccess) {
+      return NextResponse.json(
+        { error: "Unauthorized: You do not have access to this assessment level" },
+        { status: 403 }
+      )
     }
 
     // Fetch the authoritative questions for this topic from the database

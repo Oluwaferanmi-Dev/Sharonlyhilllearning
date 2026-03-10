@@ -17,7 +17,7 @@ export default async function QuizPage({
   }
 
   // SERVER-SIDE level access check — cannot be bypassed by URL typing.
-  // Beginner (order_index = 1) is always accessible; higher levels require token-based access.
+  // All levels require token-based user_level_access.
   const { data: levelData } = await supabase
     .from("assessment_levels")
     .select("order_index")
@@ -28,17 +28,15 @@ export default async function QuizPage({
     redirect("/dashboard/assessments")
   }
 
-  if (levelData.order_index > 1) {
-    const { data: userAccess } = await supabase
-      .from("user_level_access")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("level_id", levelId)
-      .maybeSingle()
+  const { data: userAccess } = await supabase
+    .from("user_level_access")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("level_id", levelId)
+    .maybeSingle()
 
-    if (!userAccess) {
-      redirect("/dashboard/assessments")
-    }
+  if (!userAccess) {
+    redirect("/dashboard/assessments")
   }
 
   // Verify the topic belongs to this level (prevents cross-level access)
