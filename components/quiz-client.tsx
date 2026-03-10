@@ -48,6 +48,7 @@ export function QuizClient({ levelId, topicId, topicName, userId }: Props) {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [isAlreadyCompleted, setIsAlreadyCompleted] = useState(false)
   const [result, setResult] = useState<SubmitResult | null>(null)
   const [isScreenRecording, setIsScreenRecording] = useState(false)
 
@@ -69,6 +70,13 @@ export function QuizClient({ levelId, topicId, topicName, userId }: Props) {
         const res = await fetch(`/api/quiz/questions?topicId=${topicId}&levelId=${levelId}`)
         if (!res.ok) {
           const data = await res.json()
+          // Check if the error is ALREADY_COMPLETED
+          if (data.error === "ALREADY_COMPLETED") {
+            setIsAlreadyCompleted(true)
+            setSubmitError(data.message)
+            setIsLoading(false)
+            return
+          }
           throw new Error(data.error || "Failed to load questions")
         }
         const data = await res.json()
@@ -116,6 +124,42 @@ export function QuizClient({ levelId, topicId, topicName, userId }: Props) {
     return (
       <div className="px-6 py-12 text-center">
         <p className="text-slate-600">Loading quiz...</p>
+      </div>
+    )
+  }
+
+  // Already Completed — Show completion notice
+  if (isAlreadyCompleted) {
+    return (
+      <div className="px-6 py-12 max-w-2xl mx-auto">
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="text-blue-900">Assessment Already Completed</CardTitle>
+            <CardDescription className="text-blue-800">{topicName}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-blue-900">
+              You have already completed this assessment. No retakes are allowed for this topic in the current phase.
+            </p>
+            <p className="text-sm text-blue-800">
+              If you need to review your results or progress, please visit the level page.
+            </p>
+            <div className="flex gap-4">
+              <Button
+                variant="outline"
+                onClick={() => router.back()}
+              >
+                Go Back
+              </Button>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={() => router.push(`/dashboard/assessments/${levelId}`)}
+              >
+                View Level Results
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }

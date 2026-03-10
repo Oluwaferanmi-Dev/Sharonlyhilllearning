@@ -27,6 +27,24 @@ export async function GET(request: NextRequest) {
 
   const adminClient = createAdminClient()
 
+  // SINGLE-ATTEMPT CHECK: Prevent starting if already completed
+  const { data: existingAttempt } = await supabase
+    .from("user_assessments")
+    .select("id, status")
+    .eq("user_id", user.id)
+    .eq("topic_id", topicId)
+    .maybeSingle()
+
+  if (existingAttempt?.status === "completed") {
+    return NextResponse.json(
+      {
+        error: "ALREADY_COMPLETED",
+        message: "You have already completed this assessment. Retakes are not allowed for this topic.",
+      },
+      { status: 403 }
+    )
+  }
+
   // Verify level is unlocked before serving questions.
   // Beginner (order_index = 1) is always accessible; higher levels require an unlock row.
   const { data: levelRow } = await adminClient

@@ -56,5 +56,18 @@ export default async function QuizPage({
   // question text only (no correct_answer field). Scoring happens server-side
   // via /api/quiz/submit. See quiz-client.tsx and /api/quiz/submit/route.ts.
 
+  // SINGLE-ATTEMPT CHECK: Prevent accessing quiz if already completed
+  const { data: existingAttempt } = await supabase
+    .from("user_assessments")
+    .select("id, status")
+    .eq("user_id", user.id)
+    .eq("topic_id", topicId)
+    .maybeSingle()
+
+  if (existingAttempt?.status === "completed") {
+    // Instead of blocking at page level, let the quiz client handle it
+    // This provides a better UX with explanation and navigation options
+  }
+
   return <QuizClient levelId={levelId} topicId={topicId} topicName={topic.name} userId={user.id} />
 }
