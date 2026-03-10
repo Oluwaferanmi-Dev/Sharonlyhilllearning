@@ -54,13 +54,13 @@ export default function LoginPage() {
             <div className="w-16 h-16 relative">
               <Image
                 src="/cherith-logo.png"
-                alt="Cherith Training Academy"
+                alt="Cherith Academy"
                 width={64}
                 height={64}
                 className="object-contain"
               />
             </div>
-            <span className="font-semibold text-slate-900">Cherith Training Academy</span>
+            <span className="font-semibold text-slate-900">Cherith Academy</span>
           </div>
           <CardTitle className="text-2xl">Welcome Back</CardTitle>
           <CardDescription>Sign in to access your assessments and progress</CardDescription>
