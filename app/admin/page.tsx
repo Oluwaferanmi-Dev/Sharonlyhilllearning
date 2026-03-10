@@ -316,8 +316,8 @@ export default function AdminDashboardPage() {
         <div className="grid md:grid-cols-3 gap-4">
           {[
             { href: "/admin/staff", label: "Manage Staff" },
+            { href: "/admin/assessments", label: "Manage Assessment Content" },
             { href: "/admin/payments", label: "View Payments" },
-            { href: "/admin/assessments", label: "View All Assessments" },
           ].map((action, idx) => (
             <Link key={idx} href={action.href}>
               <motion.div
