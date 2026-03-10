@@ -27,7 +27,7 @@ export default async function AdminPaymentsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Payment Management</h1>
-          <p className="text-slate-600 mt-2">EdoHerma subscription and payment details</p>
+          <p className="text-slate-600 mt-2">Cherith Training subscription and payment details</p>
         </div>
         <Link href="/admin">
           <Button variant="outline">Back to Dashboard</Button>
@@ -134,7 +134,7 @@ export default async function AdminPaymentsPage() {
             <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
               <div>
                 <p className="font-medium text-slate-900">Invoice #001 - Beginner Assessment License</p>
-                <p className="text-sm text-slate-600">EdoHerma Organization</p>
+                <p className="text-sm text-slate-600">Cherith Training Organization</p>
               </div>
               <div className="text-right">
                 <p className="font-semibold text-slate-900">${amountDue.toLocaleString()}</p>

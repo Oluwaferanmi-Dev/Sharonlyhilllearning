@@ -50,7 +50,7 @@ export function DashboardNav({ user }: { user: User }) {
               />
             </div>
             <span className="hidden sm:inline font-semibold text-slate-900 text-sm sm:text-base">
-              EdoHerma
+              Cherith Training
             </span>
           </Link>
 

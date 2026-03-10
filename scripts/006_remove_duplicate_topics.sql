@@ -1,5 +1,5 @@
 -- Remove the old incomplete topics from script 002
--- Keep only the 12 comprehensive EDOHERMA topics from script 005
+-- Keep only the 14 comprehensive Cherith Training topics from script 005
 
 -- Simplified cleanup to remove all old topics and questions before fresh insert
 -- This ensures no duplicates when we run the comprehensive 14-topic script

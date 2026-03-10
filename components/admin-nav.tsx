@@ -45,7 +45,7 @@ export function AdminNav({ user }: { user: User | null }) {
               />
             </div>
             <span className="hidden sm:inline font-semibold text-slate-900">
-              EDOHERMA ADMIN
+              Cherith Training Admin
             </span>
           </Link>
           <Button
@@ -77,7 +77,7 @@ export function AdminNav({ user }: { user: User | null }) {
               />
             </div>
             <span className="hidden sm:inline font-semibold text-slate-900 text-sm sm:text-base">
-              EDOHERMA ADMIN
+              Cherith Training Admin
             </span>
           </Link>
 
