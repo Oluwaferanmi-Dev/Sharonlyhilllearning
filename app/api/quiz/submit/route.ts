@@ -1,5 +1,6 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
+import { rateLimit } from "@/lib/rate-limit"
 
 const VALID_ANSWER_OPTIONS = ["A", "B", "C", "D"]
 const PASS_THRESHOLD = 70
@@ -15,6 +16,12 @@ const PASS_THRESHOLD = 70
  * Body: { topicId, levelId, answers: { [questionId]: "A" | "B" | "C" | "D" } }
  */
 export async function POST(request: NextRequest) {
+  // 20 quiz submissions per IP per hour — prevents automated re-submission loops
+  const { allowed } = rateLimit(request, { max: 20, windowMs: 60 * 60 * 1000 }, "quiz-submit")
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many submissions. Please wait before trying again." }, { status: 429 })
+  }
+
   try {
     const supabase = await createClient()
 
@@ -63,15 +70,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Topic not found or does not belong to this level" }, { status: 404 })
     }
 
-    // Verify level is unlocked before accepting submission
-    const { data: unlockData } = await supabase
-      .from("level_unlocks")
-      .select("is_unlocked")
-      .eq("level_id", levelId)
+    // Verify level is unlocked before accepting submission.
+    // Beginner (order_index = 1) is always accessible; higher levels require an unlock row.
+    const { data: levelRow } = await adminClient
+      .from("assessment_levels")
+      .select("order_index")
+      .eq("id", levelId)
       .single()
 
-    if (!unlockData?.is_unlocked) {
-      return NextResponse.json({ error: "This assessment level is locked" }, { status: 403 })
+    if (!levelRow) {
+      return NextResponse.json({ error: "Level not found" }, { status: 404 })
+    }
+
+    if (levelRow.order_index > 1) {
+      const { data: unlockData } = await adminClient
+        .from("level_unlocks")
+        .select("is_unlocked")
+        .eq("level_id", levelId)
+        .single()
+
+      if (!unlockData?.is_unlocked) {
+        return NextResponse.json({ error: "This assessment level is locked" }, { status: 403 })
+      }
     }
 
     // Fetch the authoritative questions for this topic from the database

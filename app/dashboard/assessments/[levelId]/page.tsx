@@ -44,26 +44,30 @@ export default async function AssessmentLevelPage({
     redirect("/auth/login")
   }
 
-  // SERVER-SIDE level lock check — cannot be bypassed by URL typing
-  const { data: unlockData } = await supabase
-    .from("level_unlocks")
-    .select("is_unlocked")
-    .eq("level_id", levelId)
-    .single()
-
-  if (!unlockData?.is_unlocked) {
-    redirect("/dashboard/assessments")
-  }
-
-  // Fetch level details
+  // Fetch level details first (needed for order_index to decide lock logic)
   const { data: level } = await supabase
     .from("assessment_levels")
-    .select("id, name, description, price")
+    .select("id, name, description, price, order_index, requires_payment")
     .eq("id", levelId)
     .single()
 
   if (!level) {
     redirect("/dashboard/assessments")
+  }
+
+  // SERVER-SIDE level lock check — cannot be bypassed by URL typing.
+  // Beginner (order_index = 1) is always accessible.
+  // All other levels require an active level_unlocks row with is_unlocked = true.
+  if (level.order_index > 1) {
+    const { data: unlockData } = await supabase
+      .from("level_unlocks")
+      .select("is_unlocked")
+      .eq("level_id", levelId)
+      .single()
+
+    if (!unlockData?.is_unlocked) {
+      redirect("/dashboard/assessments")
+    }
   }
 
   // Fetch topics for this level

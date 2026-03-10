@@ -156,7 +156,7 @@ CREATE INDEX IF NOT EXISTS idx_user_assessments_status ON public.user_assessment
 CREATE INDEX IF NOT EXISTS idx_user_assessments_user_level ON public.user_assessments(user_id, level_id);
 CREATE INDEX IF NOT EXISTS idx_quiz_questions_topic_id ON public.quiz_questions(topic_id);
 CREATE INDEX IF NOT EXISTS idx_level_unlocks_level_id ON public.level_unlocks(level_id);
-CREATE INDEX IF NOT EXISTS idx_announcements_is_active ON public.announcements(is_active);
+-- idx_announcements_is_active is created in the migration that creates the announcements table
 
 
 -- -----------------------------------------------------------------------------
@@ -178,4 +178,4 @@ CREATE POLICY "Authenticated users can read quiz questions" ON public.quiz_quest
   USING (true);
 
 
-RAISE NOTICE 'Migration 013 complete: integrity constraints and indexes applied.';
+DO $$ BEGIN RAISE NOTICE 'Migration 013 complete: integrity constraints and indexes applied.'; END $$;

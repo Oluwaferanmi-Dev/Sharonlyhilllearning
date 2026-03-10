@@ -25,18 +25,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  // Verify level is unlocked before serving questions
-  const { data: unlockData } = await supabase
-    .from("level_unlocks")
-    .select("is_unlocked")
-    .eq("level_id", levelId)
+  const adminClient = createAdminClient()
+
+  // Verify level is unlocked before serving questions.
+  // Beginner (order_index = 1) is always accessible; higher levels require an unlock row.
+  const { data: levelRow } = await adminClient
+    .from("assessment_levels")
+    .select("order_index")
+    .eq("id", levelId)
     .single()
 
-  if (!unlockData?.is_unlocked) {
-    return NextResponse.json({ error: "This assessment level is locked" }, { status: 403 })
+  if (!levelRow) {
+    return NextResponse.json({ error: "Level not found" }, { status: 404 })
   }
 
-  const adminClient = createAdminClient()
+  if (levelRow.order_index > 1) {
+    const { data: unlockData } = await adminClient
+      .from("level_unlocks")
+      .select("is_unlocked")
+      .eq("level_id", levelId)
+      .single()
+
+    if (!unlockData?.is_unlocked) {
+      return NextResponse.json({ error: "This assessment level is locked" }, { status: 403 })
+    }
+  }
 
   // Verify topic belongs to this level
   const { data: topic } = await adminClient
