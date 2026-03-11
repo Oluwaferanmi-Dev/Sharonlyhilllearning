@@ -49,20 +49,13 @@ export default async function DashboardPage() {
   }
 
   const adminClient = createAdminClient();
-  const { data: profileData, error: profileError } = await adminClient
+  const { data: profileData } = await adminClient
     .from("profiles")
     .select(
       "id, first_name, last_name, email, role, department, created_at, profile_picture_url"
     )
     .eq("id", user.id)
     .single();
-
-  console.log("[v0] Dashboard page - user:", user.id, "profileData:", profileData, "profileError:", profileError, "role:", profileData?.role)
-
-  if (profileData?.role === "admin") {
-    console.log("[v0] Admin detected in dashboard - redirecting to /admin")
-    redirect("/admin")
-  }
 
   const profile: Profile = profileData || {
     id: user.id,
