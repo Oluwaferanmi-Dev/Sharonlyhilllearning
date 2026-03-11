@@ -26,11 +26,6 @@ interface UserAssessment {
   passed: boolean;
 }
 
-interface LevelUnlock {
-  level_id: string;
-  is_unlocked: boolean;
-}
-
 interface Profile {
   id: string;
   first_name: string;
@@ -77,14 +72,14 @@ export default async function DashboardPage() {
     profile_picture_url: null,
   };
 
-  const { data: levelUnlocks } = await supabase
-    .from("level_unlocks")
-    .select("level_id, is_unlocked");
+  // Get user's token-based access to levels
+  const { data: userLevelAccess } = await supabase
+    .from("user_level_access")
+    .select("level_id")
+    .eq("user_id", user.id);
 
   const unlockedLevelIds = new Set(
-    (levelUnlocks || [])
-      .filter((u: LevelUnlock) => u.is_unlocked)
-      .map((u: LevelUnlock) => u.level_id)
+    (userLevelAccess || []).map((a: any) => a.level_id)
   );
 
   const { data: levels } = await supabase
