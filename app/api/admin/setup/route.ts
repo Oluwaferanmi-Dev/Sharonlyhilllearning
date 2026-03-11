@@ -133,16 +133,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Wait briefly for the DB trigger to create the profile automatically
+    // Wait for DB trigger to create the profile
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id")
+      .select("id, role")
       .eq("id", authData.user.id)
       .maybeSingle();
 
     if (!profile) {
+      // Profile wasn't created by trigger, create it manually
       const { error: profileError } = await supabase.from("profiles").insert({
         id: authData.user.id,
         email,
@@ -169,6 +170,16 @@ export async function POST(request: NextRequest) {
           { error: `Profile creation failed: ${profileError.message}` },
           { status: 500 }
         );
+      }
+    } else if (profile.role !== "admin") {
+      // Profile was created but role is wrong, update it
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ role: "admin" })
+        .eq("id", authData.user.id);
+
+      if (updateError) {
+        console.error("[v0] Failed to update admin role:", updateError);
       }
     }
 
