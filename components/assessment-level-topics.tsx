@@ -88,6 +88,7 @@ export function AssessmentLevelTopics({ topics, userAssessments, levelId, levelN
       {topics.map((topic, idx) => {
         const assessment = userAssessments.find((a) => a.topic_id === topic.id)
         const isCompleted = assessment?.status === "completed"
+        const isInProgress = assessment?.status === "in_progress"
         const score = assessment?.score
         const overview = topicOverviews[topic.name]
         const focusText =
@@ -102,11 +103,21 @@ export function AssessmentLevelTopics({ topics, userAssessments, levelId, levelN
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: idx * 0.05 }}
           >
-            <Card className={isCompleted ? "border-green-200 bg-green-50" : ""}>
+            <Card className={isCompleted ? "border-green-200 bg-green-50" : isInProgress ? "border-yellow-200 bg-yellow-50" : ""}>
               <CardHeader className="pb-3">
                 <div className="space-y-1">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-lg">{topic.name}</CardTitle>
+                    {isCompleted && (
+                      <span className="inline-block px-2 py-1 bg-green-600 text-white text-xs font-semibold rounded">
+                        Completed
+                      </span>
+                    )}
+                    {isInProgress && (
+                      <span className="inline-block px-2 py-1 bg-yellow-600 text-white text-xs font-semibold rounded">
+                        In Progress
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs font-semibold text-slate-600">{levelName} level assessment focus</p>
                   <p className="text-sm text-slate-700 leading-relaxed">{focusText}</p>
@@ -125,8 +136,13 @@ export function AssessmentLevelTopics({ topics, userAssessments, levelId, levelN
                   </div>
                 )}
                 <Link href={`/dashboard/assessments/${levelId}/${topic.id}`}>
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                    {isCompleted ? "Review Results" : "Start Topic"}
+                  <Button
+                    className="w-full"
+                    disabled={isCompleted}
+                    variant={isCompleted ? "outline" : "default"}
+                    style={isCompleted ? { backgroundColor: "#e5e7eb", color: "#6b7280", cursor: "not-allowed" } : { backgroundColor: "#2563eb" }}
+                  >
+                    {isCompleted ? "No Retakes Allowed" : isInProgress ? "Continue Topic" : "Start Topic"}
                   </Button>
                 </Link>
               </CardContent>

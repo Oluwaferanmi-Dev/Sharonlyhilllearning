@@ -62,9 +62,6 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
-  console.log("[v0] Profile fetch error:", profileError);
-  console.log("[v0] Profile data:", profileData);
-
   if (profileData?.role === "admin") {
     redirect("/admin");
   }

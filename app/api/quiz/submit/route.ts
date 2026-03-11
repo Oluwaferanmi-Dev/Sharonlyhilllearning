@@ -82,16 +82,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Level not found" }, { status: 404 })
     }
 
-    if (levelRow.order_index > 1) {
-      const { data: unlockData } = await adminClient
-        .from("level_unlocks")
-        .select("is_unlocked")
-        .eq("level_id", levelId)
-        .single()
+    // LEVEL ACCESS CHECK: Verify user has token-based access to this level
+    // All levels require user_level_access
+    const { data: userAccess } = await adminClient
+      .from("user_level_access")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("level_id", levelId)
+      .maybeSingle()
 
-      if (!unlockData?.is_unlocked) {
-        return NextResponse.json({ error: "This assessment level is locked" }, { status: 403 })
-      }
+    if (!userAccess) {
+      return NextResponse.json(
+        { error: "Unauthorized: You do not have access to this assessment level" },
+        { status: 403 }
+      )
     }
 
     // Fetch the authoritative questions for this topic from the database
@@ -139,17 +143,45 @@ export async function POST(request: NextRequest) {
     const score = Math.round((correctCount / questions.length) * 100)
     const passed = score >= PASS_THRESHOLD
 
+    // SINGLE-ATTEMPT ENFORCEMENT: Check for existing completed attempt
+    // If already completed, reject this submission (prevent duplicate completions)
+    const { data: completedAttempt, error: checkError } = await supabase
+      .from("user_assessments")
+      .select("id, status")
+      .eq("user_id", user.id)
+      .eq("topic_id", topicId)
+      .maybeSingle()
+
+    if (checkError) {
+      return NextResponse.json({ error: "Failed to verify attempt status" }, { status: 500 })
+    }
+
+    // If already completed, reject this submission with clear error
+    if (completedAttempt?.status === "completed") {
+      return NextResponse.json(
+        {
+          error: "ALREADY_COMPLETED",
+          message: "This assessment has already been completed. Duplicate submissions are not allowed.",
+        },
+        { status: 409 }
+      )
+    }
+
     // Upsert the assessment record
+    // If in_progress exists from when quiz was started, reuse it
+    // If not, create new with started_at = now
     const { data: existingAssessment } = await supabase
       .from("user_assessments")
       .select("id")
       .eq("user_id", user.id)
       .eq("topic_id", topicId)
+      .eq("status", "in_progress")
       .maybeSingle()
 
     let assessmentId: string
 
     if (existingAssessment?.id) {
+      // Reuse existing in_progress attempt
       assessmentId = existingAssessment.id
       const { error: updateError } = await adminClient
         .from("user_assessments")
@@ -166,6 +198,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Failed to save assessment" }, { status: 500 })
       }
     } else {
+      // Create new assessment (in case it wasn't created when quiz started)
       const { data: newAssessment, error: insertError } = await adminClient
         .from("user_assessments")
         .insert({
@@ -175,6 +208,7 @@ export async function POST(request: NextRequest) {
           status: "completed",
           score,
           passed,
+          started_at: new Date().toISOString(),
           completed_at: new Date().toISOString(),
         })
         .select("id")

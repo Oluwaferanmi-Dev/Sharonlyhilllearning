@@ -16,8 +16,8 @@ export default async function QuizPage({
     redirect("/auth/login")
   }
 
-  // SERVER-SIDE level lock check — cannot be bypassed by URL typing.
-  // Beginner (order_index = 1) is always accessible; higher levels require unlock.
+  // SERVER-SIDE level access check — cannot be bypassed by URL typing.
+  // All levels require token-based user_level_access.
   const { data: levelData } = await supabase
     .from("assessment_levels")
     .select("order_index")
@@ -28,16 +28,15 @@ export default async function QuizPage({
     redirect("/dashboard/assessments")
   }
 
-  if (levelData.order_index > 1) {
-    const { data: unlockData } = await supabase
-      .from("level_unlocks")
-      .select("is_unlocked")
-      .eq("level_id", levelId)
-      .single()
+  const { data: userAccess } = await supabase
+    .from("user_level_access")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("level_id", levelId)
+    .maybeSingle()
 
-    if (!unlockData?.is_unlocked) {
-      redirect("/dashboard/assessments")
-    }
+  if (!userAccess) {
+    redirect("/dashboard/assessments")
   }
 
   // Verify the topic belongs to this level (prevents cross-level access)
@@ -55,6 +54,19 @@ export default async function QuizPage({
   // NOTE: Questions are NOT passed to the client — the quiz client fetches
   // question text only (no correct_answer field). Scoring happens server-side
   // via /api/quiz/submit. See quiz-client.tsx and /api/quiz/submit/route.ts.
+
+  // SINGLE-ATTEMPT CHECK: Prevent accessing quiz if already completed
+  const { data: existingAttempt } = await supabase
+    .from("user_assessments")
+    .select("id, status")
+    .eq("user_id", user.id)
+    .eq("topic_id", topicId)
+    .maybeSingle()
+
+  if (existingAttempt?.status === "completed") {
+    // Instead of blocking at page level, let the quiz client handle it
+    // This provides a better UX with explanation and navigation options
+  }
 
   return <QuizClient levelId={levelId} topicId={topicId} topicName={topic.name} userId={user.id} />
 }
