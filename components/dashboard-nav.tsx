@@ -5,7 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
@@ -16,35 +16,10 @@ interface Profile {
   last_name?: string;
 }
 
-export function DashboardNav({ user }: { user: User }) {
+export function DashboardNav({ user, profile }: { user: User; profile: Profile | null }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const supabase = createClient();
-        const { data } = await supabase
-          .from("profiles")
-          .select("role, first_name, last_name")
-          .eq("id", user.id)
-          .single();
-
-        if (data) {
-          setProfile(data);
-        }
-      } catch (error) {
-        console.error("[v0] Failed to fetch profile:", error);
-      } finally {
-        setProfileLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [user.id]);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -113,7 +88,7 @@ export function DashboardNav({ user }: { user: User }) {
           <div className="hidden md:flex items-center gap-4 ml-auto">
             <div className="text-right">
               <p className="text-sm font-medium text-slate-900">{user.email}</p>
-              <p className="text-xs text-slate-600">{profileLoading ? "Loading..." : roleLabel}</p>
+              <p className="text-xs text-slate-600">{roleLabel}</p>
             </div>
             <Button
               variant="outline"
@@ -164,7 +139,7 @@ export function DashboardNav({ user }: { user: User }) {
             {/* Mobile User Info */}
             <div className="px-4 py-3 bg-slate-50 rounded-lg border border-slate-200">
               <p className="text-sm font-medium text-slate-900">{user.email}</p>
-              <p className="text-xs text-slate-600 mt-1">{profileLoading ? "Loading..." : roleLabel}</p>
+              <p className="text-xs text-slate-600 mt-1">{roleLabel}</p>
             </div>
 
             {/* Mobile Logout Button */}

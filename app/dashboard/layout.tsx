@@ -1,6 +1,7 @@
 import type React from "react"
 
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { DashboardNav } from "@/components/dashboard-nav"
 
@@ -16,9 +17,17 @@ export default async function DashboardLayout({
     redirect("/auth/login")
   }
 
+  // Fetch profile server-side using admin client to avoid RLS issues
+  const adminClient = await createAdminClient()
+  const { data: profileData } = await adminClient
+    .from("profiles")
+    .select("role, first_name, last_name")
+    .eq("id", data.user.id)
+    .single()
+
   return (
     <div className="min-h-screen bg-slate-50">
-      <DashboardNav user={data.user} />
+      <DashboardNav user={data.user} profile={profileData} />
       <div className="max-w-7xl mx-auto">{children}</div>
     </div>
   )
