@@ -9,8 +9,8 @@ Token prices are now stored in the database and managed by admins through the co
 **Table**: `assessment_levels`
 
 New columns:
-- `price_per_token` (DECIMAL 10,2) - Price per token in NGN
-- `price_currency` (TEXT) - Currency code (default: 'NGN')
+- `price_per_token` (DECIMAL 10,2) - Price per token in USD
+- `price_currency` (TEXT) - Currency code (default: 'USD')
 - `price_updated_at` (TIMESTAMP) - When price was last changed
 - `price_updated_by` (UUID) - Which admin updated it
 
@@ -21,9 +21,9 @@ New columns:
 ## Default Prices
 
 Seeds automatically:
-- Beginner → 100 NGN
-- Intermediate → 150 NGN
-- Advanced → 200 NGN
+- Beginner → $100 USD
+- Intermediate → $150 USD
+- Advanced → $200 USD
 
 ## API Endpoints
 
@@ -41,7 +41,7 @@ Response:
     "id": "level-uuid",
     "name": "Beginner",
     "price_per_token": 100,
-    "price_currency": "NGN"
+    "price_currency": "USD"
   }
 }
 ```
@@ -84,7 +84,7 @@ Features:
 
 **Price Editing**:
 1. Click level card to expand
-2. See current price (e.g., "100 NGN")
+2. See current price (e.g., "$100")
 3. Click "Edit" button
 4. Enter new price (must be >= 0)
 5. Click "Save" - validates and updates
@@ -102,8 +102,8 @@ When admin purchases tokens:
 **Example**:
 ```
 Quantity: 50 tokens
-Beginner price: 100 NGN
-Total: 50 × 100 = 5,000 NGN
+Beginner price: $100 USD
+Total: 50 × $100 = $5,000 USD
 ```
 
 ## Validation
@@ -138,15 +138,16 @@ This migration:
 
 ## Stripe Integration Ready
 
-The system is now ready for Stripe integration:
+The system is now ready for Stripe integration with USD pricing.
 
-1. Admin purchases tokens with quantity
-2. System calculates price from database
-3. Price passed to Stripe Checkout
-4. Stripe handles payment
-5. On success, tokens are marked as paid
+When admin purchases tokens:
+1. System fetches `price_per_token` from database (in USD)
+2. Calculates total: `quantity × price_per_token`
+3. Converts to cents for Stripe: `total_usd * 100`
+4. Creates Checkout with `currency: "usd"`
+5. On success, tokens marked as paid
 
-No hardcoded prices anywhere - fully dynamic and auditable.
+All prices are in USD. No hardcoded values - fully dynamic and auditable.
 
 ## Files Modified
 

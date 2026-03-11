@@ -191,7 +191,7 @@ export default function AssessmentsPage() {
                             </span>
                           ) : (
                             <span className="text-xs text-slate-600">
-                              Price: {level.price_per_token || 0} {level.price_currency || "NGN"}
+                              Price: ${level.price_per_token || 0}
                             </span>
                           )}
                         </CardDescription>
@@ -244,7 +244,7 @@ export default function AssessmentsPage() {
                           ) : (
                             <div className="flex items-center gap-2">
                               <span className="text-lg font-bold text-slate-900">
-                                {level.price_per_token || 0} {level.price_currency || "NGN"}
+                                ${level.price_per_token || 0}
                               </span>
                               <Button
                                 size="sm"

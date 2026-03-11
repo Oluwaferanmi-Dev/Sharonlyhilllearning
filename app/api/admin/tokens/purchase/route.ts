@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
         token_count: createdTokens.length,
         price_per_token: levelPrice,
         total_price: expectedTotal,
-        currency: 'NGN',
+        currency: 'USD',
         tokens: createdTokens,
       },
       { status: 201 }
