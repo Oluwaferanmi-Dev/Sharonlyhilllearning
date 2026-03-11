@@ -27,14 +27,23 @@ export function DashboardNav({ user }: { user: User }) {
     const fetchProfile = async () => {
       try {
         const supabase = createClient();
-        const { data } = await supabase
+        console.log("[v0] Fetching profile for user:", user.id);
+        
+        const { data, error } = await supabase
           .from("profiles")
           .select("role, first_name, last_name")
           .eq("id", user.id)
           .single();
 
+        if (error) {
+          console.error("[v0] Profile fetch error:", error);
+        }
+
         if (data) {
+          console.log("[v0] Profile fetched:", data);
           setProfile(data);
+        } else {
+          console.log("[v0] No profile data returned");
         }
       } catch (error) {
         console.error("[v0] Failed to fetch profile:", error);

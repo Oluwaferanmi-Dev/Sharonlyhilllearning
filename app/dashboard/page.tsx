@@ -57,8 +57,11 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
+  console.log("[v0] Dashboard page - user:", user.id, "profileData:", profileData, "profileError:", profileError, "role:", profileData?.role)
+
   if (profileData?.role === "admin") {
-    redirect("/admin");
+    console.log("[v0] Admin detected in dashboard - redirecting to /admin")
+    redirect("/admin")
   }
 
   const profile: Profile = profileData || {

@@ -21,13 +21,16 @@ export default async function AdminLayout({
   // The middleware handles the first layer via app_metadata; this is a
   // belt-and-suspenders check at the layout level using the service role.
   const adminClient = createAdminClient()
-  const { data: profile } = await adminClient
+  const { data: profile, error: profileError } = await adminClient
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .single()
 
-  if (profile?.role !== "admin") {
+  console.log("[v0] Admin layout - user:", user.id, "profile:", profile, "error:", profileError)
+
+  if (!profile || profile?.role !== "admin") {
+    console.log("[v0] Admin role check failed - redirecting to dashboard")
     redirect("/dashboard")
   }
 

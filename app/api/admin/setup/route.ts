@@ -173,6 +173,7 @@ export async function POST(request: NextRequest) {
       }
     } else if (profile.role !== "admin") {
       // Profile was created but role is wrong, update it
+      console.log("[v0] Admin setup - Profile exists but role is", profile.role, "updating to admin");
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ role: "admin" })
@@ -182,6 +183,8 @@ export async function POST(request: NextRequest) {
         console.error("[v0] Failed to update admin role:", updateError);
       }
     }
+
+    console.log("[v0] Admin setup complete - user:", authData.user.id, "role should be admin");
 
     return NextResponse.json(
       {
