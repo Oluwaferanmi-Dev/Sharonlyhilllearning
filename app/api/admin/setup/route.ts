@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createAdminClient();
+    const supabase = createAdminClient();
 
     const { data: existingAdmins, error: adminCountError } = await supabase
       .from("profiles")

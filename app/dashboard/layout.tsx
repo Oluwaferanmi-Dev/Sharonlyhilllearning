@@ -18,7 +18,7 @@ export default async function DashboardLayout({
   }
 
   // Fetch profile server-side using admin client to avoid RLS issues
-  const adminClient = await createAdminClient()
+  const adminClient = createAdminClient()
   const { data: profileData } = await adminClient
     .from("profiles")
     .select("role, first_name, last_name")

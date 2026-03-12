@@ -7,7 +7,7 @@ import { NextResponse } from "next/server"
  */
 export async function GET() {
   try {
-    const supabase = await createAdminClient()
+    const supabase = createAdminClient()
 
     const email = "admin@cherithtraining.com"
     const password = "AdminPassword123!"
