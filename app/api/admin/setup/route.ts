@@ -134,16 +134,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Wait for DB trigger to create the profile
+    console.log("[v0] Admin setup - Created auth user:", authData.user.id)
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileQueryError } = await supabase
       .from("profiles")
       .select("id, role")
       .eq("id", authData.user.id)
       .maybeSingle();
 
+    console.log("[v0] Admin setup - Profile query result:", profile, "Error:", profileQueryError)
+
     if (!profile) {
       // Profile wasn't created by trigger, create it manually
+      console.log("[v0] Admin setup - Profile not found, creating manually")
       const { error: profileError } = await supabase.from("profiles").insert({
         id: authData.user.id,
         email,
@@ -155,6 +159,8 @@ export async function POST(request: NextRequest) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
+
+      console.log("[v0] Admin setup - Manual profile creation result:", profileError)
 
       if (profileError) {
         if (profileError.message?.includes("organizations")) {

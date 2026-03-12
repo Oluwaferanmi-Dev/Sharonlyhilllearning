@@ -32,11 +32,18 @@ export default function LoginPage() {
       })
       if (error) throw error
 
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single()
+      console.log("[v0] Login - user data:", data.user)
+      console.log("[v0] Login - user metadata:", data.user?.user_metadata)
+
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", data.user.id).single()
+
+      console.log("[v0] Login - profile query result:", profile, profileError)
 
       if (profile?.role === "admin") {
+        console.log("[v0] Login - Admin detected, redirecting to /admin")
         router.push("/admin")
       } else {
+        console.log("[v0] Login - Staff detected, redirecting to /dashboard")
         router.push("/dashboard")
       }
     } catch (error: unknown) {
