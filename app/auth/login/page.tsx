@@ -32,9 +32,11 @@ export default function LoginPage() {
       })
       if (error) throw error
 
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single()
+      // Use user_metadata.role which is set during account creation
+      // This avoids RLS policy issues with the profiles table query
+      const userRole = data.user?.user_metadata?.role
 
-      if (profile?.role === "admin") {
+      if (userRole === "admin") {
         router.push("/admin")
       } else {
         router.push("/dashboard")

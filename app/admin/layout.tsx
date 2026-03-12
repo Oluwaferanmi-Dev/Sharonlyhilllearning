@@ -1,6 +1,6 @@
 import type React from "react"
 
-import { createClient, createAdminClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { AdminNav } from "@/components/admin-nav"
 
@@ -17,17 +17,11 @@ export default async function AdminLayout({
     redirect("/auth/login")
   }
 
-  // Secondary server-side role check against the database.
-  // The middleware handles the first layer via app_metadata; this is a
-  // belt-and-suspenders check at the layout level using the service role.
-  const adminClient = await createAdminClient()
-  const { data: profile } = await adminClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
+  // Check admin role from user_metadata (set during account creation)
+  // This avoids RLS policy issues that occur when querying the profiles table
+  const userRole = user?.user_metadata?.role
 
-  if (!profile || profile?.role !== "admin") {
+  if (userRole !== "admin") {
     redirect("/dashboard")
   }
 
