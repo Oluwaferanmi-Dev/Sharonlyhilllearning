@@ -32,15 +32,13 @@ export default function LoginPage() {
       })
       if (error) throw error
 
-      // Use user_metadata.role which is set during account creation
-      // This avoids RLS policy issues with the profiles table query
-      const userRole = data.user?.user_metadata?.role
+      // TEMP: Role checks disabled for client demo
+      // TODO: Restore role-based redirect after demo
+      // RESTORE: const roleRes = await fetch("/api/auth/role")
+      // RESTORE: const { role } = await roleRes.json()
+      // RESTORE: if (role === "admin") { router.push("/admin") } else { router.push("/dashboard") }
 
-      if (userRole === "admin") {
-        router.push("/admin")
-      } else {
-        router.push("/dashboard")
-      }
+      router.push("/dashboard")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
