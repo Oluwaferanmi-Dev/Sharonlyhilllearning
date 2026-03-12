@@ -32,16 +32,13 @@ export default function LoginPage() {
       })
       if (error) throw error
 
-      // Call the server-side role API which uses the service role client
-      // to query profiles directly, bypassing all RLS policies.
-      const roleRes = await fetch("/api/auth/role")
-      const { role } = await roleRes.json()
+      // TEMP: Role checks disabled for client demo
+      // TODO: Restore role-based redirect after demo
+      // RESTORE: const roleRes = await fetch("/api/auth/role")
+      // RESTORE: const { role } = await roleRes.json()
+      // RESTORE: if (role === "admin") { router.push("/admin") } else { router.push("/dashboard") }
 
-      if (role === "admin") {
-        router.push("/admin")
-      } else {
-        router.push("/dashboard")
-      }
+      router.push("/dashboard")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
