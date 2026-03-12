@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     console.log("[v0] Admin seed starting")
 
-    const supabase = await createAdminClient()
+    const supabase = createAdminClient()
 
     // Check if admin already exists
     const { data: existingAdmin } = await supabase.from("profiles").select("*").eq("role", "admin").limit(1).single()

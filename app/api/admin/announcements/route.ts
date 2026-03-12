@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const adminClient = await createAdminClient();
+    const adminClient = createAdminClient();
     const supabase = await createClient();
 
     const {
@@ -84,7 +84,7 @@ export async function GET() {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const adminClient = await createAdminClient();
+    const adminClient = createAdminClient();
     const supabase = await createClient();
 
     const {

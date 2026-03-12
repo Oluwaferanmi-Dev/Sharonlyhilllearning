@@ -27,7 +27,7 @@ interface Assessment {
 }
 
 export default async function AdminStaffPage() {
-  const adminClient = await createAdminClient();
+  const adminClient = createAdminClient();
 
   const { data: staffProfiles, error: staffError } = await adminClient
     .from("profiles")
