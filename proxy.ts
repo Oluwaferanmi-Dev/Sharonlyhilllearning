@@ -36,38 +36,8 @@ export async function proxy(request: NextRequest) {
     url.pathname = "/auth/login"
     return NextResponse.redirect(url)
   }
-
-  if (user) {
-    // Use app_metadata.role as the authoritative source — this is set server-side
-    // and cannot be modified by the client (unlike user_metadata).
-    const role = user.app_metadata?.role
-
-    // Redirect admins away from the staff dashboard
-    if (role === "admin" && pathname.startsWith("/dashboard")) {
-      const url = request.nextUrl.clone()
-      url.pathname = "/admin"
-      return NextResponse.redirect(url)
-    }
-
-    // Block non-admins from ALL /admin/* routes at the edge
-    if (role !== "admin" && pathname.startsWith("/admin")) {
-      const url = request.nextUrl.clone()
-      url.pathname = "/dashboard"
-      return NextResponse.redirect(url)
-    }
-
-    // Block non-admins from ALL /api/admin/* endpoints at the edge
-    if (role !== "admin" && pathname.startsWith("/api/admin")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
-
-    // Redirect authenticated users away from the landing page
-    if (pathname === "/") {
-      const url = request.nextUrl.clone()
-      url.pathname = role === "admin" ? "/admin" : "/dashboard"
-      return NextResponse.redirect(url)
-    }
-  }
+  // Allow all authenticated users through. Role-based enforcement is handled
+  // in layouts and API route guards (e.g. requireAdmin), which use profiles.role.
 
   return supabaseResponse
 }

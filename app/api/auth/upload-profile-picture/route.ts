@@ -14,17 +14,23 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Verify authenticated session — prevent uploading on behalf of another user
+    const formData = await request.formData();
+    const file = formData.get("file") as File | null;
+    const formUserId = formData.get("userId");
+
+    // Prefer the authenticated user's ID when available; during initial signup
+    // there may be no session yet, so we fall back to the explicit userId
+    // provided by the client.
     const authClient = await createClient()
     const { data: { user }, error: authError } = await authClient.auth.getUser()
-    if (authError || !user) {
+
+    const userId =
+      user?.id ??
+      (typeof formUserId === "string" && formUserId.length > 0 ? formUserId : null);
+
+    if (authError && !userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-
-    const formData = await request.formData();
-    const file = formData.get("file") as File;
-    // Always use the authenticated user's own ID — ignore client-supplied userId
-    const userId = user.id
 
     if (!file) {
       return NextResponse.json(

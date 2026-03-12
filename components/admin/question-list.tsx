@@ -36,7 +36,7 @@ export function QuestionList({ topicId, topicName, onAddNew, onEdit, onRefresh }
   const loadQuestions = async () => {
     try {
       setIsLoading(true)
-      const res = await fetch(`/api/quiz/questions?topicId=${topicId}`)
+      const res = await fetch(`/api/admin/questions?topicId=${topicId}`)
       if (!res.ok) throw new Error("Failed to load questions")
 
       const data = await res.json()

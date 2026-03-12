@@ -13,19 +13,14 @@ import { priceUpdateSchema } from '@/lib/schemas/pricing'
  *   description?: string
  * }
  */
-export async function PUT(request: NextRequest, { params }: { params: { levelId: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ levelId: string }> }) {
   try {
-    const { error: adminError } = await requireAdmin()
-    if (adminError) return adminError
+    const { user, error: adminError } = await requireAdmin()
+    if (adminError || !user) return adminError ?? NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const adminClient = createAdminClient()
     const body = await request.json()
-    const levelId = params.levelId
-
-    // Validate level_id
-    if (!levelId || typeof levelId !== 'string') {
-      return NextResponse.json({ error: 'Invalid level ID' }, { status: 400 })
-    }
+    const { levelId } = await params
 
     // Validate price if provided using schema
     if (body.price_per_token !== undefined) {
@@ -55,32 +50,12 @@ export async function PUT(request: NextRequest, { params }: { params: { levelId:
       }
     }
 
-    // Get current user for audit trail
-    const {
-      data: { user: currentUser },
-    } = await adminClient.auth.getUser()
-
-    if (!currentUser) {
-      return NextResponse.json({ error: 'Cannot identify user' }, { status: 401 })
-    }
-
-    // Verify level exists
-    const { data: level, error: levelError } = await adminClient
-      .from('assessment_levels')
-      .select('id, name')
-      .eq('id', levelId)
-      .maybeSingle()
-
-    if (levelError || !level) {
-      return NextResponse.json({ error: 'Assessment level not found' }, { status: 404 })
-    }
-
     // Build update object
     const updateData: any = {}
     if (body.price_per_token !== undefined) {
       updateData.price_per_token = body.price_per_token
       updateData.price_updated_at = new Date().toISOString()
-      updateData.price_updated_by = currentUser.id
+      updateData.price_updated_by = user.id
     }
     if (body.description !== undefined) {
       updateData.description = body.description
@@ -94,9 +69,13 @@ export async function PUT(request: NextRequest, { params }: { params: { levelId:
       .select()
       .single()
 
-    if (updateError || !updatedLevel) {
+    if (updateError) {
       console.error('[v0] Level update error:', updateError)
       return NextResponse.json({ error: 'Failed to update level' }, { status: 500 })
+    }
+
+    if (!updatedLevel) {
+      return NextResponse.json({ error: 'Assessment level not found' }, { status: 404 })
     }
 
     return NextResponse.json(
@@ -122,11 +101,7 @@ export async function PUT(request: NextRequest, { params }: { params: { levelId:
 export async function GET(request: NextRequest, { params }: { params: { levelId: string } }) {
   try {
     const adminClient = createAdminClient()
-    const levelId = params.levelId
-
-    if (!levelId || typeof levelId !== 'string') {
-      return NextResponse.json({ error: 'Invalid level ID' }, { status: 400 })
-    }
+    const { levelId } = await params
 
     const { data: level, error } = await adminClient
       .from('assessment_levels')

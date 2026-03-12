@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2, Plus, Copy, CheckCircle2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { StripeCheckoutButton } from '@/components/stripe-checkout-button'
 
 interface TokenInventory {
   level_id: string
@@ -197,7 +198,7 @@ export function TokenManagementPanel() {
                 placeholder="0.00"
               />
             </div>
-            <div className="flex items-end">
+            <div className="flex flex-col items-stretch gap-2">
               <Button
                 onClick={handleCreatePurchase}
                 disabled={creating}
@@ -211,10 +212,16 @@ export function TokenManagementPanel() {
                 ) : (
                   <>
                     <Plus className="w-4 h-4 mr-2" />
-                    Create
+                    Create (manual)
                   </>
                 )}
               </Button>
+              <StripeCheckoutButton
+                levelId={selectedLevelId}
+                levelName={levels.find((l) => l.id === selectedLevelId)?.name || 'Selected level'}
+                quantity={parseInt(quantity) || 0}
+                disabled={creating}
+              />
             </div>
           </div>
         </CardContent>

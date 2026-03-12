@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     let averageScore = 0
 
     if (staffUserIds.length > 0) {
-      const { data: assessments, error: assessmentError } = await supabase
+      const { data: assessments, error: assessmentError } = await adminClient
         .from("user_assessments")
         .select("id, status, passed, score")
         .in("user_id", staffUserIds)

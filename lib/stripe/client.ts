@@ -8,8 +8,9 @@ export function getStripeClient(): Stripe {
     throw new Error('STRIPE_SECRET_KEY environment variable is required')
   }
 
+  // Use a stable, supported Stripe API version
   return new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2024-12-15',
+    apiVersion: '2023-10-16',
   })
 }
 

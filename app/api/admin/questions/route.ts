@@ -4,6 +4,38 @@ import { requireAdmin } from "@/lib/auth/require-admin"
 import { createQuestionSchema } from "@/lib/schemas/assessment"
 
 /**
+ * GET /api/admin/questions?topicId=...
+ * List all questions for a given topic (admin management view).
+ * Admin-only endpoint.
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const { error: adminError } = await requireAdmin()
+    if (adminError) return adminError
+
+    const topicId = request.nextUrl.searchParams.get("topicId")
+    if (!topicId) {
+      return NextResponse.json({ error: "Missing topicId" }, { status: 400 })
+    }
+
+    const adminClient = createAdminClient()
+    const { data: questions, error } = await adminClient
+      .from("quiz_questions")
+      .select("id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, order_index")
+      .eq("topic_id", topicId)
+      .order("order_index", { ascending: true })
+
+    if (error) {
+      return NextResponse.json({ error: "Failed to fetch questions" }, { status: 500 })
+    }
+
+    return NextResponse.json({ questions: questions || [] }, { status: 200 })
+  } catch (error: any) {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+/**
  * POST /api/admin/questions
  * Create a new question in a topic.
  * Admin-only endpoint.

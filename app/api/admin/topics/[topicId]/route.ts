@@ -4,6 +4,35 @@ import { requireAdmin } from "@/lib/auth/require-admin"
 import { updateTopicSchema } from "@/lib/schemas/assessment"
 
 /**
+ * GET /api/admin/topics/[topicId]
+ * Fetch a single topic for admin management.
+ * Admin-only endpoint.
+ */
+export async function GET(request: NextRequest, { params }: { params: Promise<{ topicId: string }> }) {
+  try {
+    const { error: adminError } = await requireAdmin()
+    if (adminError) return adminError
+
+    const { topicId } = await params
+    const adminClient = createAdminClient()
+
+    const { data: topic, error } = await adminClient
+      .from("assessment_topics")
+      .select("*")
+      .eq("id", topicId)
+      .single()
+
+    if (error || !topic) {
+      return NextResponse.json({ error: "Topic not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ topic }, { status: 200 })
+  } catch (error: any) {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+/**
  * PUT /api/admin/topics/[topicId]
  * Update an existing topic.
  * Admin-only endpoint.

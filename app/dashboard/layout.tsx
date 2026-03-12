@@ -25,6 +25,11 @@ export default async function DashboardLayout({
     .eq("id", data.user.id)
     .single()
 
+  // Admin users should not use the staff dashboard; send them to /admin.
+  if (profileData?.role === "admin") {
+    redirect("/admin")
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <DashboardNav user={data.user} profile={profileData} />

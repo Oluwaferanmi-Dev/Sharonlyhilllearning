@@ -39,8 +39,15 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
-    // Get role from JWT metadata (fastest, avoids DB query in middleware)
-    const role = user.app_metadata?.role || user.user_metadata?.role
+    // Resolve the user's role from the profiles table so profiles.role
+    // is the single source of truth for authorization decisions.
+    let role: string | null = null
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle()
+    role = profile?.role ?? null
 
     // If admin is on a dashboard route, send to admin
     if (role === "admin" && pathname.startsWith("/dashboard")) {

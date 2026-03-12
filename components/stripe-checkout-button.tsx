@@ -40,8 +40,8 @@ export function StripeCheckoutButton({
     try {
       // Get current URL for redirect
       const currentUrl = typeof window !== 'undefined' ? window.location.origin : ''
-      const successUrl = `${currentUrl}/admin/assessments?checkout=success`
-      const cancelUrl = `${currentUrl}/admin/assessments?checkout=cancelled`
+      const successUrl = `${currentUrl}/admin/payments?checkout=success`
+      const cancelUrl = `${currentUrl}/admin/payments?checkout=cancelled`
 
       // Call backend to create checkout session
       const response = await fetch('/api/payment/create-checkout-session', {

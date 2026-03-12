@@ -26,17 +26,32 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
       if (error) throw error
 
-      // TEMP: Role checks disabled for client demo
-      // TODO: Restore role-based redirect after demo
-      // RESTORE: const roleRes = await fetch("/api/auth/role")
-      // RESTORE: const { role } = await roleRes.json()
-      // RESTORE: if (role === "admin") { router.push("/admin") } else { router.push("/dashboard") }
+      // Resolve role from the profiles table via the /api/auth/role endpoint
+      // so that redirects are driven by profiles.role as the single source of truth.
+      try {
+        const roleRes = await fetch("/api/auth/role", {
+          method: "GET",
+          headers: {
+            "Accept": "application/json",
+          },
+        })
+
+        if (roleRes.ok) {
+          const { role } = (await roleRes.json()) as { role: string | null }
+          if (role === "admin") {
+            router.push("/admin")
+            return
+          }
+        }
+      } catch {
+        // If role lookup fails for any reason, fall back to staff dashboard.
+      }
 
       router.push("/dashboard")
     } catch (error: unknown) {

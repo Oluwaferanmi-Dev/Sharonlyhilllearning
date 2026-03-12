@@ -185,11 +185,18 @@ export default function RegisterPage() {
       router.push("/auth/register-success");
     } catch (error: unknown) {
       console.log("[v0] Registration error:", error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : "An error occurred during registration"
-      );
+
+      // Provide a clearer message when the underlying database rejects the
+      // signup (e.g. duplicate NIN in the profiles table).
+      const status = typeof (error as any)?.status === "number" ? (error as any).status : null;
+      const message =
+        error instanceof Error ? error.message : "An error occurred during registration";
+
+      if (status === 500 || message === "Database error saving new user") {
+        setError("An account with this NIN already exists. Each NIN can only be used for one account.");
+      } else {
+        setError(message);
+      }
     } finally {
       setIsLoading(false);
     }

@@ -208,7 +208,7 @@ export default function AssessmentsPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-semibold text-slate-900 text-sm">Token Price</p>
-                            <p className="text-xs text-slate-600">Price per token in NGN</p>
+                            <p className="text-xs text-slate-600">Price per token in USD</p>
                           </div>
                           {editingLevelId === level.id ? (
                             <div className="flex items-center gap-2">
