@@ -20,7 +20,7 @@ export default async function AdminLayout({
   // Secondary server-side role check against the database.
   // The middleware handles the first layer via app_metadata; this is a
   // belt-and-suspenders check at the layout level using the service role.
-  const adminClient = createAdminClient()
+  const adminClient = await createAdminClient()
   const { data: profile } = await adminClient
     .from("profiles")
     .select("role")
