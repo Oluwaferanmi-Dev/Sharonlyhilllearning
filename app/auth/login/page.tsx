@@ -35,14 +35,10 @@ export default function LoginPage() {
       // Use user_metadata.role which is set during account creation
       // This avoids RLS policy issues with the profiles table query
       const userRole = data.user?.user_metadata?.role
-      console.log("[v0-login] user_metadata.role:", userRole)
-      console.log("[v0-login] full user_metadata:", data.user?.user_metadata)
 
       if (userRole === "admin") {
-        console.log("[v0-login] Redirecting to /admin")
         router.push("/admin")
       } else {
-        console.log("[v0-login] Redirecting to /dashboard")
         router.push("/dashboard")
       }
     } catch (error: unknown) {
