@@ -32,18 +32,13 @@ export default function LoginPage() {
       })
       if (error) throw error
 
-      console.log("[v0] Login - user data:", data.user)
-      console.log("[v0] Login - user metadata:", data.user?.user_metadata)
+      // Use user_metadata.role which is set during account creation
+      // This avoids RLS policy issues with the profiles table query
+      const userRole = data.user?.user_metadata?.role
 
-      const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", data.user.id).single()
-
-      console.log("[v0] Login - profile query result:", profile, profileError)
-
-      if (profile?.role === "admin") {
-        console.log("[v0] Login - Admin detected, redirecting to /admin")
+      if (userRole === "admin") {
         router.push("/admin")
       } else {
-        console.log("[v0] Login - Staff detected, redirecting to /dashboard")
         router.push("/dashboard")
       }
     } catch (error: unknown) {
