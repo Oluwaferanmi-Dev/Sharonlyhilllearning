@@ -1,6 +1,6 @@
 import type React from "react"
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { AdminNav } from "@/components/admin-nav"
 
@@ -9,7 +9,7 @@ export default async function AdminLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // Use the cookie-based SSR client to get the authenticated session user
+  // Step 1: Get the authenticated user from the cookie-based session
   const supabase = await createClient()
   const { data: { user }, error } = await supabase.auth.getUser()
 
@@ -17,17 +17,23 @@ export default async function AdminLayout({
     redirect("/auth/login")
   }
 
-  // Check admin role from user_metadata (set during account creation)
-  // This avoids RLS policy issues that occur when querying the profiles table
-  const userRole = user?.user_metadata?.role
+  // Step 2: Use the service role client (bypasses all RLS) to query the
+  // profiles table directly. This is the authoritative role check —
+  // we do not rely on session metadata or JWT claims.
+  const adminClient = createAdminClient()
+  const { data: profile } = await adminClient
+    .from("profiles")
+    .select("role")
+    .eq("id", user!.id)
+    .single()
 
-  if (userRole !== "admin") {
+  if (!profile || profile.role !== "admin") {
     redirect("/dashboard")
   }
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <AdminNav user={user} />
+      <AdminNav user={user!} />
       <div className="max-w-7xl mx-auto p-4">{children}</div>
     </div>
   )
