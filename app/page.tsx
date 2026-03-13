@@ -45,6 +45,7 @@ export default function LandingPage() {
                     alt="Cherith Academy"
                     width={96}
                     height={96}
+                    loading="lazy"
                     className="object-contain"
                   />
                 </div>
@@ -199,6 +200,7 @@ export default function LandingPage() {
               src="/nurses.png"
               alt="Healthcare professionals in hospital setting"
               fill
+              loading="lazy"
               className="object-cover"
             />
           </motion.div>
@@ -298,8 +300,8 @@ export default function LandingPage() {
             Ready to Enhance Your Compliance?
           </h2>
           <p className="text-base sm:text-xl text-blue-100 max-w-2xl mx-auto">
-            Join hundreds of healthcare organizations that trust Cherith
-            Academy for their regulatory readiness programs.
+            Join hundreds of healthcare organizations that trust Cherith Academy
+            for their regulatory readiness programs.
           </p>
           <Link href="/auth/register">
             <Button
@@ -398,7 +400,10 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-slate-700 pt-6 sm:pt-8 text-xs sm:text-sm text-center">
-            <p>&copy; 2025 Cherith Academy. All rights reserved.</p>
+            <p>
+              &copy; {new Date().getFullYear()} Cherith Academy. All rights
+              reserved.
+            </p>
           </div>
         </div>
       </footer>
