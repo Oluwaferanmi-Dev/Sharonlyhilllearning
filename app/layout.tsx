@@ -8,9 +8,9 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Cherith Training - Healthcare Compliance Platform",
+  title: "Cherith Learning - Healthcare Compliance Platform",
   description:
-    "Comprehensive healthcare compliance assessments and training programs. Master regulatory standards with expert-designed courses.",
+    "Comprehensive healthcare compliance assessments and learning programs. Master regulatory standards with expert-designed courses.",
 
   icons: {
     icon: [

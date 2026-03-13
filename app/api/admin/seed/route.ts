@@ -1,5 +1,5 @@
-import { createAdminClient } from "@/lib/supabase/server"
-import { type NextRequest, NextResponse } from "next/server"
+import { createAdminClient } from "@/lib/supabase/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 /**
  * Emergency admin seeding endpoint
@@ -12,25 +12,31 @@ import { type NextRequest, NextResponse } from "next/server"
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { secret } = body
+    const body = await request.json();
+    const { secret } = body;
 
     // Check secret to prevent unauthorized admin creation
-    const expectedSecret = process.env.ADMIN_SEED_SECRET || "change-me-in-production"
+    const expectedSecret =
+      process.env.ADMIN_SEED_SECRET || "change-me-in-production";
 
     if (secret !== expectedSecret) {
-      return NextResponse.json({ error: "Invalid secret" }, { status: 403 })
+      return NextResponse.json({ error: "Invalid secret" }, { status: 403 });
     }
 
-    console.log("[v0] Admin seed starting")
+    console.log("[v0] Admin seed starting");
 
-    const supabase = createAdminClient()
+    const supabase = createAdminClient();
 
     // Check if admin already exists
-    const { data: existingAdmin } = await supabase.from("profiles").select("*").eq("role", "admin").limit(1).single()
+    const { data: existingAdmin } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("role", "admin")
+      .limit(1)
+      .single();
 
     if (existingAdmin) {
-      console.log("[v0] Admin already exists, seed blocked")
+      console.log("[v0] Admin already exists, seed blocked");
       return NextResponse.json(
         {
           error: "Admin user already exists. Setup has already been completed.",
@@ -40,52 +46,56 @@ export async function POST(request: NextRequest) {
           },
         },
         { status: 400 },
-      )
+      );
     }
 
     // Default admin credentials
-    const adminEmail = "admin@cherithtraining.com"
-    const adminPassword = "Admin@2025" // User should change this immediately
-    const firstName = "Admin"
-    const lastName = "User"
-    const nin = "ADMIN001"
+    const adminEmail = "admin@cherithtraining.com";
+    const adminPassword = "Admin@2025"; // User should change this immediately
+    const firstName = "Admin";
+    const lastName = "User";
+    const nin = "ADMIN001";
 
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: adminEmail,
-      password: adminPassword,
-      email_confirm: true,
-      user_metadata: {
-        first_name: firstName,
-        last_name: lastName,
-        nin: nin,
-        department: "Admin",
-        role: "admin",
-      },
-    })
+    const { data: authData, error: authError } =
+      await supabase.auth.admin.createUser({
+        email: adminEmail,
+        password: adminPassword,
+        email_confirm: true,
+        user_metadata: {
+          first_name: firstName,
+          last_name: lastName,
+          nin: nin,
+          department: "Admin",
+          role: "admin",
+        },
+      });
 
     if (authError) {
-      console.log("[v0] Auth user creation error:", authError)
-      return NextResponse.json({ error: authError.message }, { status: 400 })
+      console.log("[v0] Auth user creation error:", authError);
+      return NextResponse.json({ error: authError.message }, { status: 400 });
     }
 
     if (!authData.user) {
-      console.log("[v0] No auth user returned")
-      return NextResponse.json({ error: "Failed to create auth user" }, { status: 500 })
+      console.log("[v0] No auth user returned");
+      return NextResponse.json(
+        { error: "Failed to create auth user" },
+        { status: 500 },
+      );
     }
 
-    console.log("[v0] Auth user created:", authData.user.id)
+    console.log("[v0] Auth user created:", authData.user.id);
 
     // Wait for trigger to create profile
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const { data: profile, error: profileCheckError } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", authData.user.id)
-      .single()
+      .single();
 
     if (profileCheckError || !profile) {
-      console.log("[v0] Profile not found after trigger, creating manually")
+      console.log("[v0] Profile not found after trigger, creating manually");
       const { error: profileError } = await supabase.from("profiles").insert({
         id: authData.user.id,
         email: adminEmail,
@@ -94,12 +104,15 @@ export async function POST(request: NextRequest) {
         nin: nin,
         department: "Admin",
         role: "admin",
-      })
+      });
 
       if (profileError) {
-        console.log("[v0] Manual profile creation error:", profileError)
-        await supabase.auth.admin.deleteUser(authData.user.id)
-        return NextResponse.json({ error: profileError.message }, { status: 400 })
+        console.log("[v0] Manual profile creation error:", profileError);
+        await supabase.auth.admin.deleteUser(authData.user.id);
+        return NextResponse.json(
+          { error: profileError.message },
+          { status: 400 },
+        );
       }
     }
 
@@ -107,29 +120,31 @@ export async function POST(request: NextRequest) {
     const { data: org, error: orgError } = await supabase
       .from("organizations")
       .insert({
-        name: "Cherith Training Organization",
+        name: "Cherith Learning Organization",
         admin_user_id: authData.user.id,
       })
       .select()
-      .single()
+      .single();
 
     if (orgError) {
-      console.log("[v0] Organization creation error:", orgError)
-      return NextResponse.json({ error: orgError.message }, { status: 400 })
+      console.log("[v0] Organization creation error:", orgError);
+      return NextResponse.json({ error: orgError.message }, { status: 400 });
     }
 
     // Create organization payment entry
-    const { error: paymentError } = await supabase.from("organization_payments").insert({
-      organization_id: org.id,
-      total_staff: 0,
-      amount_due: 0,
-    })
+    const { error: paymentError } = await supabase
+      .from("organization_payments")
+      .insert({
+        organization_id: org.id,
+        total_staff: 0,
+        amount_due: 0,
+      });
 
     if (paymentError) {
-      console.log("[v0] Payment entry error:", paymentError)
+      console.log("[v0] Payment entry error:", paymentError);
     }
 
-    console.log("[v0] Admin seed completed successfully")
+    console.log("[v0] Admin seed completed successfully");
 
     return NextResponse.json(
       {
@@ -141,9 +156,12 @@ export async function POST(request: NextRequest) {
         },
       },
       { status: 201 },
-    )
+    );
   } catch (error: any) {
-    console.error("[v0] Admin seed error:", error)
-    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 })
+    console.error("[v0] Admin seed error:", error);
+    return NextResponse.json(
+      { error: error.message || "Internal server error" },
+      { status: 500 },
+    );
   }
 }

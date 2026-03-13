@@ -159,7 +159,7 @@ export default function AssessmentsPage() {
               <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">
                 <div className="space-y-3 flex-1">
                   <div className="inline-block px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full mb-2">
-                    Cherith Training Compliance Excellence
+                    Cherith Learning Compliance Excellence
                   </div>
                   <CardTitle className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
                     Pre-Assessment Testing for Healthcare Compliance Excellence
@@ -186,11 +186,11 @@ export default function AssessmentsPage() {
                   <span className="font-semibold text-blue-900">
                     Pre-assessment testing is a critical first step
                   </span>{" "}
-                  in preparing Cherith Training's workforce to regulate safely and
-                  effectively against Joint Commission-style standards across
-                  all domains. This approach allows each participant to see
-                  clearly which topics are being assessed and how those topics
-                  map directly to the training modules and regulatory
+                  in preparing Cherith Learning's workforce to regulate safely
+                  and effectively against Joint Commission-style standards
+                  across all domains. This approach allows each participant to
+                  see clearly which topics are being assessed and how those
+                  topics map directly to the learning modules and regulatory
                   responsibilities they hold.
                 </p>
 
@@ -272,7 +272,7 @@ export default function AssessmentsPage() {
                       Targeted, Individualized Training
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-                      Cherith Training ensures that training is{" "}
+                      Cherith Learning ensures that training is{" "}
                       <strong>targeted rather than generic</strong>, providing
                       each user with a unique learning experience based on their
                       demonstrated knowledge gaps and learning pathway.
@@ -318,7 +318,7 @@ export default function AssessmentsPage() {
           const assessments =
             userAssessments?.filter((a) => a.level_id === level.id) || [];
           const completedCount = assessments.filter(
-            (a) => a.status === "completed"
+            (a) => a.status === "completed",
           ).length;
           const hasAccess = userAccess[level.id];
           const totalTopics = topicCounts[level.id] || 0;
