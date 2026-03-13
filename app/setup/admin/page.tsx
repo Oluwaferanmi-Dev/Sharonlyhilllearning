@@ -127,7 +127,7 @@ export default function AdminSetupPage() {
           <div className="relative w-32 h-32 bg-white rounded-lg shadow-md p-4 flex items-center justify-center">
             <Image
               src="/cherith-logo.jpg"
-              alt="Cherith Training Logo"
+              alt="Cherith Learning Logo"
               width={120}
               height={120}
               className="object-contain"
@@ -140,7 +140,7 @@ export default function AdminSetupPage() {
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl">Admin Setup</CardTitle>
             <CardDescription>
-              Create your admin account to manage Cherith Training
+              Create your admin account to manage Cherith Learning
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -178,15 +178,15 @@ export default function AdminSetupPage() {
                 <Label htmlFor="email" className="text-sm">
                   Admin Email
                 </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="admin@cherithtraining.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={loading}
-                  />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="admin@cherithtraining.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                />
               </div>
 
               <div className="space-y-1">

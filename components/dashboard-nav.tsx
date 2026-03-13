@@ -16,7 +16,13 @@ interface Profile {
   last_name?: string;
 }
 
-export function DashboardNav({ user, profile }: { user: User; profile: Profile | null }) {
+export function DashboardNav({
+  user,
+  profile,
+}: {
+  user: User;
+  profile: Profile | null;
+}) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -36,7 +42,8 @@ export function DashboardNav({ user, profile }: { user: User; profile: Profile |
     setIsMobileMenuOpen(false);
   };
 
-  const roleLabel = profile?.role === "admin" ? "Administrator" : "Staff Member";
+  const roleLabel =
+    profile?.role === "admin" ? "Administrator" : "Staff Member";
 
   return (
     <nav className="border-b border-slate-200 bg-white shadow-sm">
@@ -58,7 +65,7 @@ export function DashboardNav({ user, profile }: { user: User; profile: Profile |
               />
             </div>
             <span className="hidden sm:inline font-semibold text-slate-900 text-sm sm:text-base">
-              Cherith Training
+              Cherith Learning
             </span>
           </Link>
 
