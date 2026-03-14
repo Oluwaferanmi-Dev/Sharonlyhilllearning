@@ -58,7 +58,7 @@ export function DashboardNav({
             <div className="w-12 h-12 sm:w-16 sm:h-16 relative">
               <Image
                 src="/cherith-logo.png"
-                alt="Cherith Academy"
+                alt="Cherith Learning"
                 width={64}
                 height={64}
                 className="object-contain"

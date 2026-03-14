@@ -42,7 +42,7 @@ export default function LandingPage() {
                 <div className="w-12 h-12 sm:w-24 sm:h-24 relative">
                   <Image
                     src="/cherith-logo.png"
-                    alt="Cherith Academy"
+                    alt="Cherith Learning"
                     width={96}
                     height={96}
                     loading="lazy"
@@ -50,7 +50,7 @@ export default function LandingPage() {
                   />
                 </div>
                 <span className="text-sm sm:text-lg font-semibold text-slate-900 text-center sm:text-left">
-                  Cherith Academy
+                  Cherith Learning
                 </span>
               </div>
 
@@ -221,7 +221,7 @@ export default function LandingPage() {
             className="text-center mb-12 sm:mb-16"
           >
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
-              Why Choose Cherith Academy
+              Why Choose Cherith Learning
             </h2>
             <p className="text-base sm:text-xl text-slate-300 max-w-2xl mx-auto">
               Our assessments are designed by healthcare compliance experts to
@@ -300,8 +300,8 @@ export default function LandingPage() {
             Ready to Enhance Your Compliance?
           </h2>
           <p className="text-base sm:text-xl text-blue-100 max-w-2xl mx-auto">
-            Join hundreds of healthcare organizations that trust Cherith Academy
-            for their regulatory readiness programs.
+            Join hundreds of healthcare organizations that trust Cherith
+            Learning for their regulatory readiness programs.
           </p>
           <Link href="/auth/register">
             <Button
@@ -323,14 +323,14 @@ export default function LandingPage() {
                 <div className="w-12 h-12 sm:w-16 sm:h-16 relative">
                   <Image
                     src="/cherith-logo.png"
-                    alt="Cherith Academy"
+                    alt="Cherith Learning"
                     width={64}
                     height={64}
                     className="object-contain"
                   />
                 </div>
                 <span className="font-semibold text-sm sm:text-base text-center sm:text-left">
-                  Cherith Academy
+                  Cherith Learning
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-center sm:text-left">
@@ -401,7 +401,7 @@ export default function LandingPage() {
           </div>
           <div className="border-t border-slate-700 pt-6 sm:pt-8 text-xs sm:text-sm text-center">
             <p>
-              &copy; {new Date().getFullYear()} Cherith Academy. All rights
+              &copy; {new Date().getFullYear()} Cherith Learning. All rights
               reserved.
             </p>
           </div>

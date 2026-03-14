@@ -171,7 +171,7 @@ export default function RegisterPage() {
         console.log("[v0] Uploading profile picture...");
         const uploadResult = await uploadProfilePicture(
           authData.user.id,
-          profileFile
+          profileFile,
         );
 
         if (uploadResult) {
@@ -180,7 +180,7 @@ export default function RegisterPage() {
       }
 
       console.log(
-        "[v0] Profile created successfully via trigger, redirecting..."
+        "[v0] Profile created successfully via trigger, redirecting...",
       );
       router.push("/auth/register-success");
     } catch (error: unknown) {
@@ -188,12 +188,19 @@ export default function RegisterPage() {
 
       // Provide a clearer message when the underlying database rejects the
       // signup (e.g. duplicate NIN in the profiles table).
-      const status = typeof (error as any)?.status === "number" ? (error as any).status : null;
+      const status =
+        typeof (error as any)?.status === "number"
+          ? (error as any).status
+          : null;
       const message =
-        error instanceof Error ? error.message : "An error occurred during registration";
+        error instanceof Error
+          ? error.message
+          : "An error occurred during registration";
 
       if (status === 500 || message === "Database error saving new user") {
-        setError("An account with this NIN already exists. Each NIN can only be used for one account.");
+        setError(
+          "An account with this NIN already exists. Each NIN can only be used for one account.",
+        );
       } else {
         setError(message);
       }
@@ -210,14 +217,14 @@ export default function RegisterPage() {
             <div className="w-16 h-16 relative">
               <Image
                 src="/cherith-logo.png"
-                alt="Cherith Academy"
+                alt="Cherith Learning"
                 width={64}
                 height={64}
                 className="object-contain"
               />
             </div>
             <span className="font-semibold text-slate-900">
-              Cherith Academy
+              Cherith Learning
             </span>
           </div>
           <CardTitle className="text-2xl">Create Account</CardTitle>
