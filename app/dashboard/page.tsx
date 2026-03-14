@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { BookOpen } from "lucide-react";
 import { redirect } from "next/navigation";
 import {
   Card,
@@ -114,6 +115,12 @@ export default async function DashboardPage() {
     };
   });
 
+  const { data: courses } = await supabase
+    .from("courses")
+    .select("id, title, slug, description")
+    .order("title")
+    .limit(5);
+
   const { data: announcements } = await supabase
     .from("announcements")
     .select("id, title, message, created_at")
@@ -164,6 +171,42 @@ export default async function DashboardPage() {
 
       {announcements && announcements.length > 0 && (
         <AnnouncementsDisplay announcements={announcements} />
+      )}
+
+      {/* Courses */}
+      {courses && courses.length > 0 && (
+        <div>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-blue-600" />
+                  <CardTitle>My Courses</CardTitle>
+                </div>
+                <Link href="/dashboard/courses">
+                  <Button variant="outline" size="sm">View all</Button>
+                </Link>
+              </div>
+              <CardDescription>
+                Continue your learning with structured courses
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {courses.map((course: { id: string; title: string; description?: string }) => (
+                  <Link key={course.id} href={`/dashboard/courses/${course.id}`}>
+                    <div className="p-4 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                      <p className="font-medium text-slate-900">{course.title}</p>
+                      {course.description && (
+                        <p className="text-sm text-slate-600 mt-1 line-clamp-2">{course.description}</p>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Progress Overview */}

@@ -78,6 +78,12 @@ export function DashboardNav({
               Dashboard
             </Link>
             <Link
+              href="/dashboard/courses"
+              className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
+            >
+              Courses
+            </Link>
+            <Link
               href="/dashboard/assessments"
               className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
             >
@@ -129,6 +135,11 @@ export function DashboardNav({
               <Link href="/dashboard" onClick={closeMobileMenu}>
                 <div className="px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-900">
                   Dashboard
+                </div>
+              </Link>
+              <Link href="/dashboard/courses" onClick={closeMobileMenu}>
+                <div className="px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium text-slate-900">
+                  Courses
                 </div>
               </Link>
               <Link href="/dashboard/assessments" onClick={closeMobileMenu}>

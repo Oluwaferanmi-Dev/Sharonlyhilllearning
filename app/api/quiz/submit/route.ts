@@ -70,11 +70,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Topic not found or does not belong to this level" }, { status: 404 })
     }
 
-    // Verify level is unlocked before accepting submission.
-    // Beginner (order_index = 1) is always accessible; higher levels require an unlock row.
     const { data: levelRow } = await adminClient
       .from("assessment_levels")
-      .select("order_index")
+      .select("order_index, course_id")
       .eq("id", levelId)
       .single()
 
@@ -82,20 +80,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Level not found" }, { status: 404 })
     }
 
-    // LEVEL ACCESS CHECK: Verify user has token-based access to this level
-    // All levels require user_level_access
-    const { data: userAccess } = await adminClient
-      .from("user_level_access")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("level_id", levelId)
-      .maybeSingle()
+    // LEVEL ACCESS CHECK: token-based access, OR course-level (level has course_id)
+    const isCourseLevel = !!levelRow.course_id
+    if (!isCourseLevel) {
+      const { data: userAccess } = await adminClient
+        .from("user_level_access")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("level_id", levelId)
+        .maybeSingle()
 
-    if (!userAccess) {
-      return NextResponse.json(
-        { error: "Unauthorized: You do not have access to this assessment level" },
-        { status: 403 }
-      )
+      if (!userAccess) {
+        return NextResponse.json(
+          { error: "Unauthorized: You do not have access to this assessment level" },
+          { status: 403 }
+        )
+      }
     }
 
     // Fetch the authoritative questions for this topic from the database

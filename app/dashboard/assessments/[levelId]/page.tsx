@@ -47,10 +47,10 @@ export default async function AssessmentLevelPage({
     redirect("/auth/login");
   }
 
-  // Fetch level details first (needed for order_index to decide lock logic)
+  // Fetch level details (include course_id for course quiz levels)
   const { data: level } = await supabase
     .from("assessment_levels")
-    .select("id, name, description, price, order_index, requires_payment")
+    .select("id, name, description, price, order_index, requires_payment, course_id")
     .eq("id", levelId)
     .single();
 
@@ -58,17 +58,19 @@ export default async function AssessmentLevelPage({
     redirect("/dashboard/assessments");
   }
 
-  // SERVER-SIDE level access check — cannot be bypassed by URL typing.
-  // All levels require a user_level_access record (token redemption).
-  const { data: userAccess } = await supabase
-    .from("user_level_access")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("level_id", levelId)
-    .maybeSingle();
+  // SERVER-SIDE level access: token-based OR course-level (level has course_id)
+  const isCourseLevel = !!(level as { course_id?: string }).course_id;
+  if (!isCourseLevel) {
+    const { data: userAccess } = await supabase
+      .from("user_level_access")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("level_id", levelId)
+      .maybeSingle();
 
-  if (!userAccess) {
-    redirect("/dashboard/assessments");
+    if (!userAccess) {
+      redirect("/dashboard/assessments");
+    }
   }
 
   // Fetch topics for this level

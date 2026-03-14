@@ -27,11 +27,10 @@ export async function GET(request: NextRequest) {
 
   const adminClient = createAdminClient()
 
-  // LEVEL ACCESS CHECK: Verify user has token-based access to this level
-  // All levels require user_level_access
+  // LEVEL ACCESS CHECK: token-based access, OR course-level (level has course_id)
   const { data: levelRow } = await adminClient
     .from("assessment_levels")
-    .select("order_index")
+    .select("order_index, course_id")
     .eq("id", levelId)
     .single()
 
@@ -39,18 +38,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Level not found" }, { status: 404 })
   }
 
-  const { data: userAccess } = await adminClient
-    .from("user_level_access")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("level_id", levelId)
-    .maybeSingle()
+  const isCourseLevel = !!levelRow.course_id
+  if (!isCourseLevel) {
+    const { data: userAccess } = await adminClient
+      .from("user_level_access")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("level_id", levelId)
+      .maybeSingle()
 
-  if (!userAccess) {
-    return NextResponse.json(
-      { error: "Unauthorized: You do not have access to this assessment level" },
-      { status: 403 }
-    )
+    if (!userAccess) {
+      return NextResponse.json(
+        { error: "Unauthorized: You do not have access to this assessment level" },
+        { status: 403 }
+      )
+    }
   }
 
   // Verify topic belongs to this level
