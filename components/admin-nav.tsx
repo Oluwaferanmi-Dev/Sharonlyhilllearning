@@ -38,14 +38,14 @@ export function AdminNav({ user }: { user: User | null }) {
             <div className="w-20 h-20 relative">
               <Image
                 src="/cherith-logo.png"
-                alt="Cherith Learning"
+                alt="Sharonlyhill Learning"
                 width={80}
                 height={80}
                 className="object-contain"
               />
             </div>
             <span className="hidden sm:inline font-semibold text-slate-900">
-              Cherith Learning Admin
+              Sharonlyhill Learning Admin
             </span>
           </Link>
           <Button
@@ -70,14 +70,14 @@ export function AdminNav({ user }: { user: User | null }) {
             <div className="w-12 h-12 sm:w-16 sm:h-16 relative">
               <Image
                 src="/cherith-logo.png"
-                alt="Cherith Learning"
+                alt="Sharonlyhill Learning"
                 width={64}
                 height={64}
                 className="object-contain"
               />
             </div>
             <span className="hidden sm:inline font-semibold text-slate-900 text-sm sm:text-base">
-              Cherith Learning Admin
+              Sharonlyhill Learning Admin
             </span>
           </Link>
 

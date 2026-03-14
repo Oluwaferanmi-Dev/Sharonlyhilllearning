@@ -217,14 +217,14 @@ export default function RegisterPage() {
             <div className="w-16 h-16 relative">
               <Image
                 src="/cherith-logo.png"
-                alt="Cherith Learning"
+                alt="Sharonlyhill Learning"
                 width={64}
                 height={64}
                 className="object-contain"
               />
             </div>
             <span className="font-semibold text-slate-900">
-              Cherith Learning
+              Sharonlyhill Learning
             </span>
           </div>
           <CardTitle className="text-2xl">Create Account</CardTitle>

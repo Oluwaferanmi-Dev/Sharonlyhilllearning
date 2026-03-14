@@ -127,7 +127,7 @@ export default function AdminSetupPage() {
           <div className="relative w-32 h-32 bg-white rounded-lg shadow-md p-4 flex items-center justify-center">
             <Image
               src="/cherith-logo.jpg"
-              alt="Cherith Learning Logo"
+              alt="Sharonlyhill Learning Logo"
               width={120}
               height={120}
               className="object-contain"
@@ -140,7 +140,7 @@ export default function AdminSetupPage() {
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl">Admin Setup</CardTitle>
             <CardDescription>
-              Create your admin account to manage Cherith Learning
+              Create your admin account to manage Sharonlyhill Learning
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     const { data: org, error: orgError } = await supabase
       .from("organizations")
       .insert({
-        name: "Cherith Learning Organization",
+        name: "Sharonlyhill Learning Organization",
         admin_user_id: authData.user.id,
       })
       .select()

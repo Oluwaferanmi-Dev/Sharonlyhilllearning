@@ -63,7 +63,7 @@ export default async function ProfilePage() {
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
             <CardDescription>
-              Your account details from the Cherith Learning platform
+              Your account details from the Sharonlyhill Learning platform
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

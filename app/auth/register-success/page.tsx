@@ -17,7 +17,7 @@ export default function RegisterSuccessPage() {
           <div className="flex items-center justify-center mb-4">
             <Image
               src="/cherith-logo.jpg"
-              alt="Cherith Learning"
+              alt="Sharonlyhill Learning"
               width={160}
               height={160}
               className="object-contain"
