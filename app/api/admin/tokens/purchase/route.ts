@@ -1,7 +1,7 @@
-import { createAdminClient } from '@/lib/supabase/server'
-import { type NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/auth/require-admin'
-import { generateTokenCode, PAYMENT_STATUS } from '@/lib/tokens/token-manager'
+import { createAdminClient } from "@/lib/supabase/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth/require-admin";
+import { generateTokenCode, PAYMENT_STATUS } from "@/lib/tokens/token-manager";
 
 /**
  * Create a token purchase and generate individual tokens.
@@ -18,77 +18,81 @@ import { generateTokenCode, PAYMENT_STATUS } from '@/lib/tokens/token-manager'
  */
 export async function POST(request: NextRequest) {
   try {
-    const { error: adminError } = await requireAdmin()
-    if (adminError) return adminError
+    // BUG FIX: requireAdmin() returns the authenticated user from the session cookie.
+    // The original code tried to extract the user from an Authorization header
+    // that doesn't exist in browser-session requests — always returning null
+    // and causing every purchase to fail with a 400 error.
+    const { user, error: adminError } = await requireAdmin();
+    if (adminError || !user) {
+      return (
+        adminError ??
+        NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      );
+    }
 
-    const adminClient = createAdminClient()
-    const body = await request.json()
-    const { level_id, quantity, amount_paid, payment_status = PAYMENT_STATUS.COMPLETED, stripe_session_id } = body
+    const adminClient = createAdminClient();
+    const body = await request.json();
+    const {
+      level_id,
+      quantity,
+      amount_paid,
+      payment_status = PAYMENT_STATUS.COMPLETED,
+      stripe_session_id,
+    } = body;
 
     // Validate inputs
     if (!level_id || !quantity || amount_paid === undefined) {
       return NextResponse.json(
-        { error: 'Missing required fields: level_id, quantity, amount_paid' },
-        { status: 400 }
-      )
+        { error: "Missing required fields: level_id, quantity, amount_paid" },
+        { status: 400 },
+      );
     }
 
     if (!Number.isInteger(quantity) || quantity <= 0 || quantity > 10000) {
       return NextResponse.json(
-        { error: 'Quantity must be a positive integer (1-10000)' },
-        { status: 400 }
-      )
+        { error: "Quantity must be a positive integer (1-10000)" },
+        { status: 400 },
+      );
     }
 
-    if (typeof amount_paid !== 'number' || amount_paid < 0) {
-      return NextResponse.json({ error: 'Amount paid must be a non-negative number' }, { status: 400 })
+    if (typeof amount_paid !== "number" || amount_paid < 0) {
+      return NextResponse.json(
+        { error: "Amount paid must be a non-negative number" },
+        { status: 400 },
+      );
     }
 
     // Verify level exists and get its price
     const { data: level, error: levelError } = await adminClient
-      .from('assessment_levels')
-      .select('id, price_per_token')
-      .eq('id', level_id)
-      .maybeSingle()
+      .from("assessment_levels")
+      .select("id, price_per_token")
+      .eq("id", level_id)
+      .maybeSingle();
 
     if (levelError || !level) {
-      return NextResponse.json({ error: 'Assessment level not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: "Assessment level not found" },
+        { status: 404 },
+      );
     }
 
     // Calculate expected total from database price
-    const levelPrice = level.price_per_token || 0
-    const expectedTotal = quantity * levelPrice
+    const levelPrice = level.price_per_token || 0;
+    const expectedTotal = quantity * levelPrice;
 
     // Validate amount paid matches expected total (with some tolerance for rounding)
-    const priceDifference = Math.abs(amount_paid - expectedTotal)
+    const priceDifference = Math.abs(amount_paid - expectedTotal);
     if (priceDifference > 1) {
-      // Allow 1 unit of currency difference due to rounding
       console.warn(
-        `[v0] Price mismatch: expected ${expectedTotal}, got ${amount_paid}, difference: ${priceDifference}`
-      )
-      // We could reject here or allow with warning - for now allow but log
+        `[v0] Price mismatch: expected ${expectedTotal}, got ${amount_paid}, difference: ${priceDifference}`,
+      );
     }
 
-    // Get admin user ID from JWT
-    const adminUserId = request.headers
-      .get('x-admin-user-id') // Could be passed in header, but safer to get from JWT
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
-
-    // For now, we'll need to get the user from Supabase auth
-    const supabaseAdminClient = createAdminClient()
-    const {
-      data: { user: adminUser },
-    } = await supabaseAdminClient.auth.getUser(token || '')
-
-    if (!adminUser?.id) {
-      return NextResponse.json({ error: 'Cannot identify admin user' }, { status: 400 })
-    }
-
-    // Create the purchase record
+    // Create the purchase record using the verified admin user from the session
     const { data: purchase, error: purchaseError } = await adminClient
-      .from('token_purchases')
+      .from("token_purchases")
       .insert({
-        admin_user_id: adminUser.id,
+        admin_user_id: user.id,
         level_id,
         quantity,
         amount_paid,
@@ -96,33 +100,38 @@ export async function POST(request: NextRequest) {
         stripe_session_id,
       })
       .select()
-      .single()
+      .single();
 
     if (purchaseError || !purchase) {
-      console.error('[v0] Purchase creation error:', purchaseError)
-      return NextResponse.json({ error: 'Failed to create purchase' }, { status: 500 })
+      console.error("[v0] Purchase creation error:", purchaseError);
+      return NextResponse.json(
+        { error: "Failed to create purchase" },
+        { status: 500 },
+      );
     }
 
     // Generate individual tokens for this purchase
-    const tokens = []
+    const tokens = [];
     for (let i = 0; i < quantity; i++) {
       tokens.push({
         purchase_id: purchase.id,
         level_id,
         token_code: generateTokenCode(),
-        status: 'unused',
-      })
+        status: "unused",
+      });
     }
 
     const { data: createdTokens, error: tokensError } = await adminClient
-      .from('access_tokens')
+      .from("access_tokens")
       .insert(tokens)
-      .select('token_code')
+      .select("token_code");
 
     if (tokensError || !createdTokens) {
-      console.error('[v0] Token generation error:', tokensError)
-      // Optionally: delete the purchase record if token generation fails
-      return NextResponse.json({ error: 'Failed to generate tokens' }, { status: 500 })
+      console.error("[v0] Token generation error:", tokensError);
+      return NextResponse.json(
+        { error: "Failed to generate tokens" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json(
@@ -133,13 +142,16 @@ export async function POST(request: NextRequest) {
         token_count: createdTokens.length,
         price_per_token: levelPrice,
         total_price: expectedTotal,
-        currency: 'USD',
+        currency: "USD",
         tokens: createdTokens,
       },
-      { status: 201 }
-    )
+      { status: 201 },
+    );
   } catch (error: any) {
-    console.error('[v0] Token purchase fatal error:', error)
-    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 })
+    console.error("[v0] Token purchase fatal error:", error);
+    return NextResponse.json(
+      { error: "An unexpected error occurred" },
+      { status: 500 },
+    );
   }
 }
