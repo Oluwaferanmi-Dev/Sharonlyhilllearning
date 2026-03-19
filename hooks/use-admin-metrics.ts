@@ -1,53 +1,55 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react";
 
 interface AdminMetrics {
-  totalStaff: number
-  topicsStarted: number
-  topicsCompleted: number
-  topicsPassed: number
-  averageScore: number
+  totalStaff: number;
+  topicsStarted: number;
+  topicsCompleted: number;
+  topicsPassed: number;
+  averageScore: number;
 }
 
 interface RecentStaff {
-  id: string
-  first_name: string
-  last_name: string
-  email: string
-  department: string
-  created_at: string
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  department: string;
+  created_at: string;
 }
 
 interface AdminMetricsResponse {
-  metrics: AdminMetrics
-  recentStaff: RecentStaff[]
-  payment: any
+  metrics: AdminMetrics;
+  recentStaff: RecentStaff[];
+  payment: any;
 }
 
 interface UseAdminMetricsReturn {
-  metrics: AdminMetrics | null
-  recentStaff: RecentStaff[]
-  payment: any
-  loading: boolean
-  error: string | null
-  refetch: () => Promise<void>
+  metrics: AdminMetrics | null;
+  recentStaff: RecentStaff[];
+  payment: any;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
 }
 
 export function useAdminMetrics(enabled = true): UseAdminMetricsReturn {
-  const [metrics, setMetrics] = useState<AdminMetrics | null>(null)
-  const [recentStaff, setRecentStaff] = useState<RecentStaff[]>([])
-  const [payment, setPayment] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
+  const [recentStaff, setRecentStaff] = useState<RecentStaff[]>([]);
+  const [payment, setPayment] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchMetrics = async () => {
-    if (!enabled) return
+  // BUG FIX: wrapped in useCallback so the useEffect dependency array is
+  // complete and always calls the current version of the function.
+  const fetchMetrics = useCallback(async () => {
+    if (!enabled) return;
 
     try {
-      setLoading(true)
-      setError(null)
-      console.log("[v0] Fetching admin metrics hook")
+      setLoading(true);
+      setError(null);
+      console.log("[v0] Fetching admin metrics hook");
 
       const response = await fetch("/api/admin/metrics", {
         method: "GET",
@@ -55,45 +57,50 @@ export function useAdminMetrics(enabled = true): UseAdminMetricsReturn {
           "Content-Type": "application/json",
         },
         cache: "no-store",
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch metrics")
+        throw new Error("Failed to fetch metrics");
       }
 
-      const data: AdminMetricsResponse = await response.json()
+      const data: AdminMetricsResponse = await response.json();
 
-      console.log("[v0] Metrics received:", data.metrics)
+      console.log("[v0] Metrics received:", data.metrics);
 
-      setMetrics(data.metrics)
-      setRecentStaff(data.recentStaff || [])
-      setPayment(data.payment)
+      setMetrics(data.metrics);
+      setRecentStaff(data.recentStaff || []);
+      setPayment(data.payment);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to fetch metrics"
-      console.error("[v0] Metrics fetch error:", message)
-      setError(message)
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch metrics";
+      console.error("[v0] Metrics fetch error:", message);
+      setError(message);
       setMetrics({
         totalStaff: 0,
         topicsStarted: 0,
         topicsCompleted: 0,
         topicsPassed: 0,
         averageScore: 0,
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  }, [enabled]);
 
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
 
-    // Fetch on mount
-    fetchMetrics()
+    // Fetch immediately on mount
+    fetchMetrics();
 
-    const interval = setInterval(fetchMetrics, 30000)
+    // Poll every 30 seconds
+    const interval = setInterval(fetchMetrics, 30000);
 
-    return () => clearInterval(interval)
-  }, [enabled])
+    return () => clearInterval(interval);
+  }, [enabled, fetchMetrics]);
 
   return {
     metrics,
@@ -102,5 +109,5 @@ export function useAdminMetrics(enabled = true): UseAdminMetricsReturn {
     loading,
     error,
     refetch: fetchMetrics,
-  }
+  };
 }

@@ -85,7 +85,11 @@ export function AssessmentCard({
   onStart,
 }: AssessmentCardProps) {
   const progress = Math.round((completedCount / totalTopics) * 100);
-  const topicOverview = TOPIC_OVERVIEWS[name];
+
+  // BUG FIX
+  const topicOverview =
+    TOPIC_OVERVIEWS[name] ??
+    TOPIC_OVERVIEWS[name.replace(/\s*\([^)]*\)\s*$/, "")];
 
   return (
     <motion.div

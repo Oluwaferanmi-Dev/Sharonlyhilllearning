@@ -39,25 +39,6 @@ const DEPARTMENTS = [
   "Other",
 ];
 
-// NIN validation function
-const validateNIN = (nin: string): { isValid: boolean; message: string } => {
-  // Remove any whitespace
-  const cleanNIN = nin.trim();
-
-  // Check if NIN is exactly 11 digits
-  if (!/^\d{11}$/.test(cleanNIN)) {
-    return {
-      isValid: false,
-      message: "NIN must be exactly 11 digits",
-    };
-  }
-
-  return {
-    isValid: true,
-    message: "NIN is valid",
-  };
-};
-
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -73,9 +54,9 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  //? Handle NIN validation
+  // This is the real validateNIN — the only one. It sets ninError state and
+  // returns a boolean. It is called by both handleNinChange and handleRegister.
   const validateNIN = (value: string) => {
-    // Remove any non-digit characters
     const digitsOnly = value.replace(/\D/g, "");
 
     if (digitsOnly.length === 0) {
@@ -96,19 +77,16 @@ export default function RegisterPage() {
     setNinError("");
     return true;
   };
-  //? Handle NIN input change with validation
+
   const handleNinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Only allow digits
     const digitsOnly = value.replace(/\D/g, "");
-    // Limit to 11 digits
     const limitedValue = digitsOnly.slice(0, 11);
 
     setNin(limitedValue);
     validateNIN(limitedValue);
   };
 
-  //? Handle Image Upload
   const handleFileSelect = (file: File) => {
     setProfileFile(file);
     const reader = new FileReader();
@@ -122,7 +100,6 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
 
-    //* Validate NIN before submission
     if (!validateNIN(nin) || nin.length !== 11) {
       setError("Please enter a valid 11-digit NIN");
       return;
@@ -186,8 +163,6 @@ export default function RegisterPage() {
     } catch (error: unknown) {
       console.log("[v0] Registration error:", error);
 
-      // Provide a clearer message when the underlying database rejects the
-      // signup (e.g. duplicate NIN in the profiles table).
       const status =
         typeof (error as any)?.status === "number"
           ? (error as any).status
