@@ -1,96 +1,102 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useToast } from '@/hooks/use-toast'
-import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
 interface TokenRedemptionDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onSuccess?: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export function TokenRedemptionDialog({ isOpen, onClose, onSuccess }: TokenRedemptionDialogProps) {
-  const [tokenCode, setTokenCode] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const { toast } = useToast()
+export function TokenRedemptionDialog({
+  isOpen,
+  onClose,
+  onSuccess,
+}: TokenRedemptionDialogProps) {
+  const [tokenCode, setTokenCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleRedeem = async () => {
-    setError(null)
-    setSuccessMessage(null)
+    setError(null);
+    setSuccessMessage(null);
 
     if (!tokenCode.trim()) {
-      setError('Please enter a token code')
-      return
+      setError("Please enter a token code");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      const response = await fetch('/api/tokens/redeem', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/tokens/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token_code: tokenCode.trim() }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        const errorType = data.error
-        if (errorType === 'INVALID_TOKEN') {
-          setError('Token not found. Please check the code and try again.')
-        } else if (errorType === 'EXPIRED_TOKEN') {
-          setError('This token has expired. Please contact your administrator.')
-        } else if (errorType === 'ALREADY_REDEEMED_BY_YOU') {
-          setError('You have already redeemed a token for this level.')
-        } else if (errorType === 'ALREADY_USED') {
-          setError('This token has already been used by another staff member.')
-        } else if (errorType === 'ALREADY_HAS_ACCESS') {
-          setError('You already have access to this assessment level.')
+        const errorType = data.error;
+        if (errorType === "INVALID_TOKEN") {
+          setError("Token not found. Please check the code and try again.");
+        } else if (errorType === "EXPIRED_TOKEN") {
+          setError(
+            "This token has expired. Please contact your administrator.",
+          );
+        } else if (errorType === "ALREADY_REDEEMED_BY_YOU") {
+          setError("You have already redeemed a token for this level.");
+        } else if (errorType === "ALREADY_USED") {
+          setError("This token has already been used by another staff member.");
+        } else if (errorType === "ALREADY_HAS_ACCESS") {
+          setError("You already have access to this assessment level.");
         } else {
-          setError(data.message || 'Failed to redeem token')
+          setError(data.message || "Failed to redeem token");
         }
-        return
+        return;
       }
 
-      setSuccessMessage(data.message)
+      setSuccessMessage(data.message);
       toast({
-        title: 'Success',
-        description: 'Token redeemed! Redirecting to assessments...',
-      })
+        title: "Success",
+        description: "Token redeemed! Redirecting to assessments...",
+      });
 
       // Clear form and close after success
       setTimeout(() => {
-        setTokenCode('')
-        setSuccessMessage(null)
-        onClose()
-        onSuccess?.()
-      }, 2000)
+        setTokenCode("");
+        setSuccessMessage(null);
+        onClose();
+        onSuccess?.();
+      }, 2000);
     } catch (err) {
-      console.error('[v0] Token redemption error:', err)
-      setError('An unexpected error occurred. Please try again.')
+      console.error("[v0] Token redemption error:", err);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !isLoading) {
-      handleRedeem()
+    if (e.key === "Enter" && !isLoading) {
+      handleRedeem();
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -98,7 +104,8 @@ export function TokenRedemptionDialog({ isOpen, onClose, onSuccess }: TokenRedem
         <DialogHeader>
           <DialogTitle>Redeem Access Token</DialogTitle>
           <DialogDescription>
-            Enter your token code to unlock an assessment level. Token codes are provided by your administrator.
+            Enter your token code to unlock an assessment level. Token codes are
+            provided by your administrator.
           </DialogDescription>
         </DialogHeader>
 
@@ -107,15 +114,18 @@ export function TokenRedemptionDialog({ isOpen, onClose, onSuccess }: TokenRedem
             <Label htmlFor="token-code">Token Code</Label>
             <Input
               id="token-code"
-              placeholder="e.g., A3K9X2L7"
+              placeholder="e.g., CHR-A3K9-X2L7-M9P5"
               value={tokenCode}
               onChange={(e) => setTokenCode(e.target.value.toUpperCase())}
               onKeyDown={handleKeyDown}
               disabled={isLoading || !!successMessage}
-              maxLength={8}
+              // BUG FIX: maxLength changed from 8 to 18.
+              maxLength={18}
               className="uppercase font-mono tracking-widest"
             />
-            <p className="text-xs text-slate-500">8-character code provided by your administrator</p>
+            <p className="text-xs text-slate-500">
+              18-character code in the format CHR-XXXX-XXXX-XXXX
+            </p>
           </div>
 
           {error && (
@@ -143,15 +153,20 @@ export function TokenRedemptionDialog({ isOpen, onClose, onSuccess }: TokenRedem
                 Redeeming...
               </>
             ) : (
-              'Redeem Token'
+              "Redeem Token"
             )}
           </Button>
 
-          <Button variant="outline" onClick={onClose} disabled={isLoading} className="w-full">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={isLoading}
+            className="w-full"
+          >
             Cancel
           </Button>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

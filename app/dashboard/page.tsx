@@ -53,7 +53,7 @@ export default async function DashboardPage() {
   const { data: profileData } = await adminClient
     .from("profiles")
     .select(
-      "id, first_name, last_name, email, role, department, created_at, profile_picture_url"
+      "id, first_name, last_name, email, role, department, created_at, profile_picture_url",
     )
     .eq("id", user.id)
     .single();
@@ -76,13 +76,26 @@ export default async function DashboardPage() {
     .eq("user_id", user.id);
 
   const unlockedLevelIds = new Set(
-    (userLevelAccess || []).map((a: any) => a.level_id)
+    (userLevelAccess || []).map((a: any) => a.level_id),
   );
 
   const { data: levels } = await supabase
     .from("assessment_levels")
     .select("*")
     .order("order_index");
+
+  // BUG FIX: fetch the real topic count per level from the database.
+  const topicCountsByLevel: Record<string, number> = {};
+  if (levels && levels.length > 0) {
+    const { data: topicCounts } = await supabase
+      .from("assessment_topics")
+      .select("level_id");
+
+    (topicCounts || []).forEach((row: any) => {
+      topicCountsByLevel[row.level_id] =
+        (topicCountsByLevel[row.level_id] || 0) + 1;
+    });
+  }
 
   const { data: userAssessments } = await supabase
     .from("user_assessments")
@@ -92,16 +105,16 @@ export default async function DashboardPage() {
 
   const assessmentsByLevel = (levels || []).map((level: AssessmentLevel) => {
     const assessments = (userAssessments || []).filter(
-      (a: UserAssessment) => a.level_id === level.id
+      (a: UserAssessment) => a.level_id === level.id,
     );
     const completed = assessments.filter(
-      (a: UserAssessment) => a.status === "completed"
+      (a: UserAssessment) => a.status === "completed",
     ).length;
     const passed = assessments.filter((a: UserAssessment) => a.passed).length;
     const isLocked = !unlockedLevelIds.has(level.id);
 
-    const total =
-      assessments.length > 0 ? Math.max(assessments.length, 14) : 14;
+    // BUG FIX: use the real topic count from the DB instead of the hardcoded 14
+    const total = topicCountsByLevel[level.id] ?? 0;
 
     return {
       level,
@@ -109,7 +122,7 @@ export default async function DashboardPage() {
       completed,
       passed,
       inProgress: assessments.find(
-        (a: UserAssessment) => a.status === "in_progress"
+        (a: UserAssessment) => a.status === "in_progress",
       ),
       isLocked,
     };
@@ -121,25 +134,23 @@ export default async function DashboardPage() {
     .order("title")
     .limit(5);
 
-  const { data: announcements } = await supabase
+  // Fixed in bug 3 — two separate queries, filtered in JS
+  const { data: dismissedData } = await supabase
+    .from("dismissed_announcements")
+    .select("announcement_id")
+    .eq("user_id", user.id);
+
+  const dismissedIds = (dismissedData || []).map((d: any) => d.announcement_id);
+
+  const { data: allAnnouncements } = await supabase
     .from("announcements")
     .select("id, title, message, created_at")
     .eq("is_active", true)
-    .not(
-      "id",
-      "in",
-      `(${
-        (
-          await supabase
-            .from("dismissed_announcements")
-            .select("announcement_id")
-            .eq("user_id", user.id)
-        ).data
-          ?.map((d) => d.announcement_id)
-          .join(",") || ""
-      })`
-    )
     .order("created_at", { ascending: false });
+
+  const announcements = (allAnnouncements || []).filter(
+    (a: any) => !dismissedIds.includes(a.id),
+  );
 
   return (
     <div className="px-6 py-12 space-y-8">
@@ -158,7 +169,6 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* Header text */}
         <div className="space-y-2">
           <h1 className="text-4xl font-bold text-slate-900">
             Welcome, {profile?.first_name || "Student"}
@@ -184,7 +194,9 @@ export default async function DashboardPage() {
                   <CardTitle>My Courses</CardTitle>
                 </div>
                 <Link href="/dashboard/courses">
-                  <Button variant="outline" size="sm">View all</Button>
+                  <Button variant="outline" size="sm">
+                    View all
+                  </Button>
                 </Link>
               </div>
               <CardDescription>
@@ -193,16 +205,29 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-2">
-                {courses.map((course: { id: string; title: string; description?: string }) => (
-                  <Link key={course.id} href={`/dashboard/courses/${course.id}`}>
-                    <div className="p-4 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
-                      <p className="font-medium text-slate-900">{course.title}</p>
-                      {course.description && (
-                        <p className="text-sm text-slate-600 mt-1 line-clamp-2">{course.description}</p>
-                      )}
-                    </div>
-                  </Link>
-                ))}
+                {courses.map(
+                  (course: {
+                    id: string;
+                    title: string;
+                    description?: string;
+                  }) => (
+                    <Link
+                      key={course.id}
+                      href={`/dashboard/courses/${course.id}`}
+                    >
+                      <div className="p-4 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                        <p className="font-medium text-slate-900">
+                          {course.title}
+                        </p>
+                        {course.description && (
+                          <p className="text-sm text-slate-600 mt-1 line-clamp-2">
+                            {course.description}
+                          </p>
+                        )}
+                      </div>
+                    </Link>
+                  ),
+                )}
               </div>
             </CardContent>
           </Card>
@@ -234,35 +259,12 @@ export default async function DashboardPage() {
                     totalTopics={total}
                     isLocked={isLocked}
                   />
-                )
+                ),
               )}
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Quick Actions */}
-      {/* <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">
-          Quick Actions
-        </h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          <Link href="/dashboard/assessments">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
-              View All Assessments
-            </Button>
-          </Link>
-          <Link href="/profile">
-            <Button
-              variant="outline"
-              className="w-full bg-transparent"
-              size="lg"
-            >
-              Edit Profile
-            </Button>
-          </Link>
-        </div>
-      </div> */}
     </div>
   );
 }

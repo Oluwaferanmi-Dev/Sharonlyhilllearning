@@ -74,7 +74,7 @@ export default function LandingPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-xs sm:text-sm text-slate-600 hover:text-blue-600 px-2 sm:px-4"
+                  className="text-xs sm:text-sm text-slate-600 hover:text-blue-600 px-2 sm:px-4 cursor-pointer"
                 >
                   Admin Setup
                 </Button>
@@ -83,7 +83,7 @@ export default function LandingPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-xs sm:text-sm"
+                  className="text-xs sm:text-sm cursor-pointer"
                 >
                   Sign In
                 </Button>
@@ -91,7 +91,7 @@ export default function LandingPage() {
               <Link href="/auth/register">
                 <Button
                   size="sm"
-                  className="text-xs sm:text-sm bg-blue-600 hover:bg-blue-700"
+                  className="text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 cursor-pointer"
                 >
                   Create Account
                 </Button>
@@ -300,8 +300,8 @@ export default function LandingPage() {
             Ready to Enhance Your Compliance?
           </h2>
           <p className="text-base sm:text-xl text-blue-100 max-w-2xl mx-auto">
-            Join hundreds of healthcare organizations that trust Sharonlyhill Learning
-            Learning for their regulatory readiness programs.
+            Join hundreds of healthcare organizations that trust Sharonlyhill
+            Learning Learning for their regulatory readiness programs.
           </p>
           <Link href="/auth/register">
             <Button
@@ -401,8 +401,8 @@ export default function LandingPage() {
           </div>
           <div className="border-t border-slate-700 pt-6 sm:pt-8 text-xs sm:text-sm text-center">
             <p>
-              &copy; {new Date().getFullYear()} Sharonlyhill Learning. All rights
-              reserved.
+              &copy; {new Date().getFullYear()} Sharonlyhill Learning. All
+              rights reserved.
             </p>
           </div>
         </div>
